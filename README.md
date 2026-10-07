@@ -1,90 +1,125 @@
 # Optimus Prime
 
-**Optimus Prime is an experimental multi-market quantitative trading and capital-allocation system designed to discover, validate and deploy systematic trading strategies under deterministic risk controls.** Project 100C began as its first vertical slice, focused on Indian index derivatives; the broader architecture is evolving toward market-wide opportunity discovery, multi-strategy portfolio allocation and additional asset classes.
+[![CI](https://github.com/udited22/optimus-prime/actions/workflows/ci.yml/badge.svg)](https://github.com/udited22/optimus-prime/actions/workflows/ci.yml)
 
-> **Status: no validated edge yet. No live trading.** No order has ever been sent to a real broker. Every P&L, trade and dashboard figure in this repository is SIMULATED or a backtest. This is a personal research project, not investment advice and not an offer of any service.
+**A research-first quantitative trading system built around reproducibility, deterministic risk and capital discipline.**
 
-![Command centre (SIMULATED data)](docs/screenshots/v3.2/05-terminal-1440p.png)
+Optimus Prime treats systematic trading as an end-to-end systems problem: data quality, hypothesis testing, validation, portfolio construction, risk control, execution and observability all have to work together before a strategy is eligible for capital.
 
-## Principles
+> **Current status — research and paper only.** No strategy has cleared the full validation standard and this public build cannot place live orders. Every P&L, trade and dashboard figure shown here is simulated or produced by a backtest.
 
-- **Research can be clever; trading must be boring.** The research plane may explore anything but has no authority to place orders. The production plane is deterministic: no language model, no discretionary override.
-- **Evidence before capital.** A strategy earns capital only with positive expectancy after realistic costs, out-of-sample robustness, a known minimum viable capital and an acceptable risk of ruin.
-- **"No trade" is a valid position.** If the smallest executable position exceeds the risk budget, the system does not trade.
-- **Fail loud, prefer stopping.** Unknown or untrustworthy state disables entries; kill switches latch and survive restarts.
-- **Honest labels.** SIMULATED, ASSUMED and UNVERIFIED are stated wherever they apply.
+![Optimus Prime command centre — simulated data](docs/screenshots/v3.2/05-terminal-1440p.png)
+
+## Why this exists
+
+Most trading projects start with a signal and bolt controls on later. Optimus Prime starts with the opposite assumption: **an apparent edge is worthless unless the system can prove it survives realistic costs, out-of-sample testing, regime changes and deterministic risk constraints.**
+
+The research layer is intentionally allowed to experiment. Transactional authority is not. Research can propose; deterministic software decides whether an intent is admissible, and the execution path can always refuse to trade.
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    A[Market & reference data] --> B[Data quality + lineage]
+    B --> C[Research & backtesting]
+    C --> D[Validation & experiment registry]
+    D --> E[Portfolio / market context]
+    E --> F[Trade intent]
+    F --> G{Deterministic Risk Governor}
+    G -->|reject| H[No trade / halt]
+    G -->|approve| I[Execution state machine]
+    I --> J[Paper / broker adapter]
+    J --> K[Independent reconciliation]
+    K --> L[Append-only journal + command centre]
+    L --> G
 ```
-Research plane (no broker access)                    Production plane (deterministic)
-  data lake + data-quality checks                      Strategy → TradeIntent
-  cost model (dated, verified charges)                   → Prime Risk: Risk Governor (absolute veto, 18 checks,
-  backtester (look-ahead guard, fill models)                 9 latched kill switches, signed risk tickets)
-  StrategySpec / StructureSpec                           → Prime Execution: order FSM, idempotent IDs, gateway,
-  validation gates V1–V18, untouched holdout                 reconciliation (broker = truth)
-  experiment registry (hash-chained trial count)       → broker adapter (fake / paper today)
-  economics: minimum viable capital, cost drag         append-only hash-chained journal → read-only command centre
-```
 
-- **Optimus Labs** (research): specs, backtests, validation and the trial registry. **Optimus Intelligence**: the regime and market-context layer. **Optimus CIO**: the allocator (advisory; the Governor checks every intent).
-- The core (kernel, execution, portfolio, regime, strategies, specs) is market- and broker-agnostic; only adapters (brokers, data sources, alert channels) name a vendor. `tests/test_architecture_boundaries.py` enforces this.
-- Details: [docs/architecture/](docs/architecture/architecture.md), risk: [docs/risk/](docs/risk/risk-engine.md), policy rules cited in code as `OD-xxx`: [docs/risk/policy-rules.md](docs/risk/policy-rules.md).
+The system is deliberately split into four public concepts:
 
-## Capabilities (built and tested against fakes and recorded data)
+- **Research** — market data, hypotheses, backtests, cost models, validation and experiment tracking.
+- **Portfolio** — market context, regime information and strategy/capital allocation.
+- **Risk** — a deterministic governor with absolute veto authority, exposure controls and latched safety stops.
+- **Execution** — typed trade intents, order state machines, idempotency, reconciliation and broker adapters.
 
-| Area | What exists |
+Language models or research agents are never part of the authoritative order path.
+
+## What is built today
+
+| Layer | Current capability |
 |---|---|
-| Data | NSE F&O calendar and expiry rules, lot-size history, instrument masters, a data-only historical-data downloader with resumable backfill, crypto (Binance public archive) and US starter loaders, content-addressed Parquet lake with lineage and DQ quarantine. No market data is committed. |
-| Research | Event-driven backtester, 24 research StrategySpecs plus a draft (all RESEARCH, none validated), defined-risk multi-leg structure schema and simulator, regime classifier (UNVALIDATED), validation toolkit V1–V18 with event-day certification, holdout partition, experiment registry, cost-drag study, minimum-viable-capital model. |
-| Risk and execution | Long-options-only mandate, Risk Governor, kill switches, kernel state rebuilt from the journal, runtime harness (protective stops, forced flatten, Exit-All), order FSM and gateway, standalone reconciler, fake and paper brokers, a broker REST/feed adapter tested only against local fakes. |
-| Operations | Host composition root (`replay` and `paper` modes; `live` is refused by this build), market-day scheduler, status server, redacted structured logs, encrypted credential store, alert channel and fail-closed daily broker-token gate. |
-| UI | Read-only command centre (Vite + TypeScript; SIMULATED events from the real Governor and kernel against a fake broker). The only control is a two-step manual master kill. **Tony** is its conversational interface: deterministic rules over system state, no language model, no confidence numbers. |
+| **Data** | Exchange calendars and instrument metadata, resumable historical-data ingestion, public crypto/US starter loaders, content-addressed Parquet storage, lineage and data-quality quarantine. Market data itself is not committed. |
+| **Research** | Event-driven backtester, versioned strategy specifications, structure simulator, realistic cost modelling, holdout testing, experiment registry and a multi-stage validation toolkit. |
+| **Portfolio** | Market-context/regime plumbing and portfolio allocation primitives. These remain research components until independently validated. |
+| **Risk** | Deterministic Risk Governor, typed risk decisions, kill switches, state reconstruction from the journal and fail-closed handling of untrusted state. |
+| **Execution** | Order state machine, idempotent request handling, fake/paper adapters and independent reconciliation. Live execution is disabled in the public build. |
+| **Observability** | Read-only TypeScript command centre backed by real kernel/Governor events generated against simulated execution. |
 
-## Evidence so far
+## Evidence over optimism
 
-About 445 pre-registered trials on five years of NIFTY one-minute history: **none passes the validation gates.** Intraday option buying loses before costs in every form tested; regime-selected books look good only in-sample; intraday premium selling loses to costs. Two leads have positive point estimates but confidence intervals that include zero, and need several lakh of capital per lot; they are being checked forward on PAPER. Summary: [docs/research/negative-results.md](docs/research/negative-results.md). Method: [docs/research/methodology.md](docs/research/methodology.md).
+The system has already rejected considerably more research than it has promoted. Roughly **445 registered trials across five years of NIFTY one-minute history currently produce no strategy that clears the full validation standard.** Several attractive in-sample results disappear after costs, holdout testing or uncertainty analysis.
 
-## Public engine, private alpha
+That is a feature, not an embarrassment: Optimus Prime is designed to make false confidence difficult to operationalise.
 
-Live candidates' exact rules and parameters are not in this repository. `src/project100c/alpha.py` loads an optional private alpha library (`$P100C_ALPHA_DIR` or a gitignored `private_alpha/`) that can add plug-ins, specs and config overrides; without it the engine runs and the tests pass. Synthetic stand-ins are in [`examples/`](examples/). See [docs/engineering/private-alpha.md](docs/engineering/private-alpha.md).
+- [Research methodology](docs/research/methodology.md)
+- [Validation framework](docs/research/validation.md)
+- [Negative results](docs/research/negative-results.md)
+- [Cost-drag study](docs/research/cost-drag-study.md)
+
+## Engineering principles
+
+1. **Evidence before capital.** A strategy must earn promotion through reproducible evidence rather than a visually attractive backtest.
+2. **No trade is a valid decision.** If data, state, liquidity or risk is outside policy, the correct output is no new exposure.
+3. **Risk is independent of strategy.** Strategy code cannot relax portfolio or execution constraints.
+4. **Fail closed.** Unknown or inconsistent state blocks new entries; safety controls are explicit and testable.
+5. **Broker state is external truth.** Reconciliation is independent of the component that created the order.
+6. **Be explicit about uncertainty.** `SIMULATED`, `ASSUMED` and `UNVERIFIED` are labels, not footnotes.
+
+## Explore the system
+
+- [Architecture](docs/architecture/architecture.md) — system boundaries and trust model.
+- [Risk engine](docs/risk/risk-engine.md) — deterministic admission and safety controls.
+- [Research methodology](docs/research/methodology.md) — how experiments are structured.
+- [Validation](docs/research/validation.md) — promotion gates and holdout discipline.
+- [Private-alpha boundary](docs/engineering/private-alpha.md) — how reusable infrastructure remains public without publishing live research candidates.
 
 ## Install and test
 
-Python 3.12+ (developed on 3.13); Node 20+ for the UI.
+Python 3.12+ is required; Node 20+ is used by the command centre.
 
 ```bash
-python -m venv .venv && .venv/bin/pip install -e ".[dev]"
-(cd dashboard && npm ci)                       # optional: UI build and vitest (also run from pytest when present)
-.venv/bin/ruff check src tests scripts && .venv/bin/mypy && .venv/bin/python -m pytest -q
-gitleaks git --redact .
+python -m venv .venv
+.venv/bin/pip install -e ".[dev]"
+(cd dashboard && npm ci)
+
+.venv/bin/ruff check src tests scripts
+.venv/bin/ruff format --check src tests scripts
+.venv/bin/mypy
+.venv/bin/python -m pytest -q
+(cd dashboard && npm test -- --run && npm run build)
 ```
 
-Run the read-only command centre on SIMULATED data:
+CI runs the same quality gates on every push and pull request.
 
-```bash
-(cd dashboard && npm ci && npm run build)
-.venv/bin/python -m project100c.observability.dashboard        # http://127.0.0.1:8765/
+## Repository map
+
+```text
+src/        trading-system engine: data, research, portfolio, risk, execution and observability
+tests/      unit, property, failure-injection and integration tests
+configs/    versioned public configuration and reproducibility inputs
+specs/      public research specifications; no live candidate alpha
+examples/   synthetic examples and paper-mode fixtures
+dashboard/  read-only command centre
+docs/       curated architecture, methodology, risk and research documentation
 ```
 
-Tests: 1,541 passed, 8 skipped (the broker-sandbox contract tests without a sandbox key, and the dashboard build tests without `dashboard/node_modules`). The Python package keeps its original name, `project100c`.
+## Public engine, private alpha
 
-## Repository layout
+This repository intentionally publishes the reusable engine rather than live candidate strategies. Exact rules, parameters and current research candidates belong in a separate gitignored/private alpha library. Public synthetic stand-ins exercise the same schemas and safety boundaries without exposing candidate IP.
 
-```
-src/project100c/   engine: costs, sessions, calendar, instruments, data, dq, spec, backtest, strategies, regime,
-                   validation, registry, portfolio, kernel, execution, broker, paper, economics, ops, observability
-tests/             pytest suite (+ fixtures from public instrument files and shape-faithful synthetic responses)
-configs/           versioned costs, calendar, sessions, risk limits, DQ thresholds, regime, validation, economics
-specs/             research StrategySpecs (falsified or untested; none validated)
-examples/          SYNTHETIC structure specs and a PAPER config
-scripts/           data backfills, coverage reports, research runners, cost-drag and economics reports
-dashboard/         read-only command centre (UI frozen)
-docs/              architecture/, research/, risk/, engineering/, data/ (coverage and DQ reports, no prices)
-```
+See [docs/engineering/private-alpha.md](docs/engineering/private-alpha.md).
 
-## License and disclaimer
+## Scope and disclaimer
 
-No license has been chosen yet, so default copyright applies: you may read the code, but no reuse rights are granted.
+Optimus Prime is a personal engineering and quantitative-research project. It is not an investment product, signal service or recommendation. Backtests and simulations are not evidence of future returns, and market trading can result in substantial losses.
 
-Trading index options carries a substantial risk of loss. Nothing here is investment advice, a recommendation or evidence of future returns. Backtests rest on explicitly labelled assumptions. Under the SEBI/NSE retail-algo framework this software is for the owner's personal use only.
+The public repository is intentionally free of credentials, personal capital targets, broker-account details, live strategy parameters and trading journals.
