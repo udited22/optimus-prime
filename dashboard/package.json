@@ -1,8 +1,8 @@
 {
-  "name": "project100c-dashboard",
+  "name": "optimus-prime-dashboard",
   "private": true,
   "version": "0.1.0",
-  "description": "Project 100C 'Jarvis' command centre (docs/architecture/observability.md v3). Read-only; SIMULATED data.",
+  "description": "Optimus Prime read-only quantitative trading command centre. Simulated and paper data only.",
   "type": "module",
   "scripts": {
     "dev": "vite",
