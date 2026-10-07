@@ -1,58 +1,114 @@
-# 08 — Backtesting Architecture
+# Backtesting architecture
 
-## 8.1 Principles
-- **One engine, production code.** The backtester drives the *same* `Strategy`, `RiskGovernor`, `OrderConstructionEngine` and OMS state machine used live. Only the clock, the data source and the fill adapter are simulated.
-- **Event-driven, point-in-time.** Events are replayed in `exchange_ts` order with a configurable **decision latency** (default 500 ms from event to intent, plus 300 ms from intent to exchange ack. These are conservative placeholders to be replaced by measured values). A strategy cannot see an event until `ts + latency`.
-- **Pessimistic by default.** Wherever the data is ambiguous (OHLC bars, missing quotes), the fill model assumes the worse outcome.
-- **Every run is registered** (code SHA, data manifest hash, params, seed, cost-model version, fill-model version) so results can be reproduced bit-for-bit and multiple testing is counted.
+Optimus Prime uses backtesting primarily as a **falsification environment**. A backtest is useful when it makes a strategy easier to reject for the right reasons, not when it produces the largest historical return.
 
-## 8.2 Components
+The design goal is to keep research behaviour close to the paper/execution domain model while making assumptions explicit and reproducible.
+
+## Principles
+
+### Event-driven and point-in-time
+
+Historical events are replayed in timestamp order. Strategy logic can only observe information that would have been available at the simulated decision time.
+
+This rules out common forms of accidental look-ahead such as using end-of-bar values to make a start-of-bar decision or applying today's instrument metadata to historical contracts.
+
+### Pessimistic when data is ambiguous
+
+When historical data cannot establish an optimistic fill with confidence, the fill model should prefer the less favourable interpretation or mark the assumption explicitly.
+
+Examples include:
+
+- passive limit orders where queue position is unknown;
+- stop orders around gaps;
+- bars without bid/ask data;
+- missing or stale option-chain observations;
+- assumed rather than measured slippage.
+
+### Costs are part of the strategy
+
+Research is evaluated after explicit transaction costs and execution friction. Cost schedules are versioned by effective date so a long historical test does not incorrectly apply today's fees to every period.
+
+A strategy that only has edge before realistic costs does not have deployable edge.
+
+### Every experiment counts
+
+Runs are registered with enough metadata to reproduce and audit them, including data fingerprints, code/config versions, parameters, seed and model versions.
+
+The experiment history is retained so repeated trial-and-error is visible to validation rather than disappearing behind the final selected backtest.
+
+## Components
+
 | Component | Responsibility |
 |---|---|
-| `ReplayFeed` | Reads Parquet partitions and merges streams (spot, futures, options, VIX, constituents, events) into one ordered event stream. Emits DQ flags exactly as the live DQ gate would |
-| `SimClock` | Deterministic clock and trading calendar (holidays, special sessions, 15:30→15:40 close change on 3-Aug-2026, expiry-day rules) |
-| `ChainBuilder` | Point-in-time option-chain snapshots with staleness flags; own IV/Greeks |
-| `FillModel` (pluggable) | `QuoteFillModel` (when bid/ask exists): buy fills at ask, or at limit if limit ≥ ask. Queue-position model for passive limits: fill only if the price trades *through* the limit, or if ≥ Q volume trades at the limit after arrival. `BarFillModel` (OHLC only): synthetic spread table by time × moneyness × DTE × VIX (built without VIX, ASSUMED: a limit buy fills only if bar low + half-spread < limit, and the half-spread is ≥ 1 tick). Stops fill at `min(stop_limit, next bar open)` with gap handling. SL-limit orders that gap past their limit remain **unfilled** (realistic NSE behaviour), and the kernel's fallback exit logic is exercised |
-| `CostModel` | Dated table (see 04 §4.4): brokerage, STT (sell and exercise), NSE txn, SEBI, stamp, GST. Applied per executed order. **Versioned**, e.g. `CM-2026-04-01` |
-| `LatencyModel` | Distributions for decision, submit, ack, fill. Missed-order probability; API-downtime windows injected from a scenario file |
-| `Portfolio/Kernel` | Same NAV/HWM/DD/Greeks accounting as live |
-| `Analytics` | Per-trade record identical to the live execution-analytics schema (§15), plus summary stats, CIs and regime slices |
-| `ExperimentRegistry` | Stores every run. The Validation agent reads the full trial count for deflated-Sharpe / multiple-testing adjustments |
+| **Replay feed** | merges historical market/reference streams into deterministic event order |
+| **Simulated clock** | provides point-in-time session/calendar behaviour |
+| **Market-state builder** | constructs the snapshot a strategy could actually have observed |
+| **Fill model** | translates historical quotes/bars into conservative simulated executions |
+| **Cost model** | applies dated explicit fees and configurable execution friction |
+| **Portfolio / risk kernel** | uses the same portfolio/risk domain rules exercised in paper mode |
+| **Experiment registry** | records every research run and its reproducibility metadata |
+| **Analytics** | produces net-of-cost trade evidence, uncertainty and robustness diagnostics |
 
-## 8.3 NSE/NIFTY specifics the engine must model
-- Tick size ₹0.05, lot 65 (point-in-time from the instrument master), freeze quantity, daily price bands on options (reject orders outside them).
-- Weekly expiry on Tuesday (from 1-Sep-2025; Thursday before). Holiday shifts. Monthly = last Tuesday.
-- Expiry-day behaviour: the extra 2% ELM for shorts; no calendar-spread benefit; the kernel's forced flat (15:00 IST hard, OD-002).
-- STT on exercise if held to expiry ITM (the engine **flags any position reaching expiry as a violation**, since the kernel forbids it).
-- Upfront premium: buying power = cash − open premium − charges reserve.
-- Session changes: pre-open 09:00–09:08, normal 09:15–15:30 (15:40 from 3-Aug-2026), CAS effects on the underlying at 15:15–15:35.
+## Fill modelling
 
-## 8.4 Event replay mode (for kernel testing)
-The same replay can be driven with **fault scripts**:
-- WebSocket drop for 5–120 s
-- stale quotes
-- crossed book
-- broker 5xx/429 responses
-- partial fills
-- rejected SL order
-- duplicate fill messages
-- out-of-order order updates
-- clock jump
-- lot-size change mid-session
-- instrument master missing the next expiry
+Different data quality supports different confidence levels.
 
-Each fault has an expected kernel reaction (kill switch, flatten, halt), and those expectations are asserted in tests (18-backlog, K-T*).
+### Quote-aware fills
 
-## 8.5 Outputs per run
-*Built so far (1-Oct-2026): `backtest/report.py` writes `ledger.jsonl`, which can be re-verified with `verify_ledger_file`. It also writes `cost_breakdown.json`, with brokerage, STT, exchange txn, SEBI fee, stamp duty and GST per fill and in total, the assumed half-spread per fill, and gross versus net. It writes `summary.json` as well, with the metadata: lake input fingerprints, assumptions, spec deviations and model versions. The rest of this section is still to do.*
+When executable bid/ask data exists, fills can be modelled relative to the available quote and order limit. Passive fills remain conservative because historical top-of-book data does not automatically reveal queue priority.
 
-- Trade ledger (Parquet), equity curve (net of all costs), exposure/Greeks time series.
-- Stats: expectancy per trade in ₹ and in R, hit rate, payoff ratio, profit factor, Sharpe/Sortino **with bootstrap CIs**, max DD, time under water, tail (CVaR 95/99), turnover, cost share of gross P&L, and slippage sensitivity (P&L at 1×, 1.5×, 2×, 3× assumed slippage).
-- Regime slices (P&L by regime label and by DTE bucket).
-- A "what killed it" breakdown: P&L versus cost versus slippage attribution.
+### Bar-based fills
 
-## 8.6 Anti-patterns that are banned
-- Using close prices of the same bar for signal and fill.
-- Using any vendor "IV" or "Greeks" computed with end-of-bar data at the start of the bar.
-- Using today's instrument master or lot size for historical dates.
-- Optimising for CAGR (§20). Model selection uses out-of-sample expectancy CI and robustness, never peak backtest return.
+OHLC-only research requires stronger assumptions. The engine therefore treats spread/slippage as model inputs rather than pretending the bar contains an executable market.
+
+If the path inside a bar is ambiguous, the simulator does not choose the sequence that helps the strategy.
+
+### Gaps and protection
+
+Protective orders are modelled with gap behaviour rather than assuming a stop always fills exactly at its trigger. This matters because risk estimates that depend on perfect stop execution are generally fragile.
+
+## Fault replay
+
+The replay environment also exercises system behaviour rather than only strategy P&L. Deterministic scenarios can inject conditions such as:
+
+- stale or missing market data;
+- feed interruption;
+- partial fills;
+- order rejection/timeouts;
+- duplicate or reordered updates;
+- reconciliation mismatch;
+- clock/configuration anomalies;
+- instrument/reference-data changes.
+
+The expected outcome is a risk/execution state transition that can be asserted in tests.
+
+## Research outputs
+
+A useful run should make it possible to answer more than "did it make money?". Outputs can include:
+
+- trade ledger and net equity path;
+- gross versus net P&L and cost attribution;
+- expectancy and payoff distribution;
+- drawdown and time-under-water measures;
+- bootstrap confidence intervals;
+- turnover and cost share of gross P&L;
+- slippage sensitivity;
+- performance sliced by relevant regimes or contract features;
+- explicit assumptions and data-quality limitations.
+
+The emphasis is on understanding **why** a result exists and what would make it disappear.
+
+## Anti-patterns
+
+The research process deliberately rejects several convenient shortcuts:
+
+- signal and fill using information from the same completed bar when that information was not yet available;
+- present-day lot sizes, calendars or instrument metadata applied retrospectively;
+- unlabelled synthetic spreads or execution assumptions;
+- selecting a strategy because of peak CAGR rather than out-of-sample expectancy and robustness;
+- discarding failed trials from the multiple-testing history;
+- treating a backtest as evidence of future returns.
+
+## Relationship to validation
+
+Backtesting generates evidence; it does not promote a strategy by itself. Promotion is governed by the separate [validation framework](../research/validation.md), which considers out-of-sample behaviour, uncertainty, costs and robustness before a candidate can progress.
