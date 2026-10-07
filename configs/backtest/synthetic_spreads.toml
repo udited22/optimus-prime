@@ -1,0 +1,61 @@
+# Synthetic bid-ask spread model for bar-based backtests (backlog B-02).
+#
+# STATUS: ASSUMED. Nothing in this file is measured. We hold no NIFTY option quote history, so these numbers are
+# deliberately pessimistic placeholders chosen by us, not taken from any source. They stay ASSUMED until our own
+# tick recorder (D-10) has measured real top-of-book spreads and a calibration replaces this file. The loader
+# refuses any status other than "ASSUMED" (there is no calibration path yet), and every backtest that uses this
+# model carries the version and the ASSUMED label in its ledger.
+#
+# How it is used (src/project100c/backtest/spreads.py):
+#   full spread  = max(min_spread_ticks x tick, premium_pct x premium) x time-of-day x DTE x moneyness multipliers
+#   capped at      max(min_spread_ticks x tick, max_spread_pct x premium), then rounded UP to whole ticks
+#   half-spread  = ceil(spread_ticks / 2) ticks  (rounded up: against the strategy)
+# The bar fill model then demands that the bar trade THROUGH the limit by at least the half-spread:
+#   BUY limit fills only if low + half < limit; SELL only if high - half > limit; a stop SELL whose bar opens
+#   below limit + half is treated as gapped (no fill on that bar).
+# All multipliers must be >= 1: a band may widen the spread but never narrow it below the base.
+version = "SPREAD-ASSUMED-2026-10-01.1"
+status = "ASSUMED"
+basis = "No measurement. Conservative placeholders pending D-10 tick-recorder calibration."
+tick_size = "0.05"
+min_spread_ticks = 2          # never assume less than 0.10 rupee full spread
+premium_pct = "0.01"          # 1% of premium as the base full spread
+max_spread_pct = "0.25"       # cap: never more than 25% of premium (still >= min_spread_ticks)
+
+# Time of day (IST, bar START time, [start, end)). Must tile from 09:15 to at least 15:30 without gaps; the last
+# band runs to 15:40 because the F&O session config closes at 15:40 from its 2026 revision (NSE-FO-2026 entry).
+[[time_of_day]]
+start = "09:15"
+end = "09:30"
+multiplier = "2.0"            # opening auction aftermath: widest books
+[[time_of_day]]
+start = "09:30"
+end = "15:00"
+multiplier = "1.0"
+[[time_of_day]]
+start = "15:00"
+end = "15:40"
+multiplier = "1.5"            # last half hour of the cash session and the F&O extension
+
+# Trading days to expiry (0 = expiry day). Bands by inclusive upper bound; the last band is open-ended.
+[[dte]]
+max_days = 0
+multiplier = "1.5"
+[[dte]]
+max_days = 6
+multiplier = "1.0"
+[[dte]]
+multiplier = "1.25"           # far-dated weeklies/monthlies trade thinner
+
+# Distance from ATM in whole strike steps (|strike - spot| / step, rounded to nearest). Last band open-ended.
+[[moneyness]]
+max_steps = 2
+multiplier = "1.0"
+[[moneyness]]
+max_steps = 5
+multiplier = "1.25"
+[[moneyness]]
+max_steps = 10
+multiplier = "1.75"
+[[moneyness]]
+multiplier = "2.5"

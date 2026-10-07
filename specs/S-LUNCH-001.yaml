@@ -1,0 +1,128 @@
+# S-LUNCH-001 (docs/research/strategy-hypotheses.md strategy library). RESEARCH: no evidence, no confidence. Param values are pre-registered
+# priors, not fitted numbers. Every number here is ASSUMED until validated on real data.
+id: S-LUNCH-001
+version: 0.1.0
+status: RESEARCH
+owner_agent: research.library
+created: '2026-10-02'
+hypothesis: A 12:00-13:00 NIFTY range no taller than 0.2% of price and 40% of the morning range, broken after 13:00 on an
+  expanding bar, is followed by a move of at least 1.5 R before 14:40 more often than chance.
+economic_rationale: Lunchtime liquidity is thin and the range compresses; the return of afternoon participants (and European
+  open flows) resolves it, and the first expansion often runs.
+required_data:
+- dataset: nifty_index_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  availability: UNVERIFIED
+- dataset: nifty_opt_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  - volume
+  availability: UNVERIFIED
+- dataset: india_vix_1m
+  granularity: 1m
+  availability: UNVERIFIED
+signal:
+  formula: box = 12:00-13:00; (hi-lo)/px <= box_max_pct and hi-lo <= box_vs_morning x morning range; after 13:00 a bar with
+    range >= expansion_mult x mean box bar range closing beyond the box -> BUY CE / BUY PE
+  params:
+    box_max_pct:
+      value: 0.2
+      min: 0.1
+      max: 0.35
+      step: 0.05
+    box_vs_morning:
+      value: 0.4
+      min: 0.25
+      max: 0.6
+      step: 0.05
+    expansion_mult:
+      value: 1.8
+      min: 1.3
+      max: 3.0
+      step: 0.1
+legs:
+- side: BUY
+  right: SIGNAL
+eligible_regimes:
+- VOLATILITY_COMPRESSION
+- VOLATILITY_NORMAL
+prohibited_regimes:
+- EVENT_REGIME
+- LOW_LIQUIDITY
+- ABNORMAL_MARKET
+- NO_EDGE
+invalidation_rules:
+- kind: PRICE_LEVEL
+  description: a close back inside the lunch box
+  action: EXIT_POSITION
+- kind: REGIME_CHANGE
+  description: the market turns abnormal
+  action: EXIT_POSITION
+  regimes:
+  - ABNORMAL_MARKET
+- kind: DATA
+  description: 'the index or option bar of a minute is missing: no entry on that minute'
+  action: CANCEL_ENTRY
+selection:
+  expiry: nearest weekly with DTE >= 1
+  strike: ATM (nearest the index); delta band not implemented
+entry:
+  trigger: first expanding break of the lunch box after 13:00
+  window_start: '13:00:00'
+  window_end: '14:00:00'
+  order:
+    type: LIMIT
+    price_rule: last option close + 1 tick (mid proxy), chase capped at first limit + max_chase_ticks
+    ttl_seconds: 60
+    max_chase_ticks: 2
+  max_entries_per_day: 1  # OD-014 style default (docs/research/strategy-hypotheses.md entry caps): one lunch window a day
+exit:
+  stop:
+    method: PREMIUM_PCT
+    value: 25
+    order: SL_LIMIT
+    limit_offset_ticks: 4
+  profit_taking: 1.5 R
+  time_exit: '14:40:00'
+  max_holding_minutes: 45
+sizing:
+  method: 1 lot per leg if the summed risk_at_stop <= the per-trade budget (2% NAV) else NO TRADE
+  max_lots: 1
+  risk_at_stop_formula: sum over legs of (entry - stop_limit) * lot + round-trip charges + (entry+stop slippage ticks) *
+    tick * lot
+expected_frequency: 1-2 per week (prior)
+expected_slippage:
+  entry_ticks: 1
+  exit_ticks: 1
+  stop_ticks: 2
+  source: assumed
+cost_assumptions:
+  cost_model_version: CM-2026-04-01
+  brokerage_plan: upstox-options
+capacity: high relative to one lot (NIFTY weekly ATM liquidity)
+failure_modes:
+- afternoon theta on weekly options near expiry
+- false breaks that return into the box
+- limited time before the 14:50 flatten
+falsification_criteria:
+- OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0
+- afternoon moves after a lunch-box break are not larger than after afternoons without a compressed lunch box
+cost_sensitivity: Afternoon ATM premiums are lower (INR 50-110); a 1.5 R target on a 25% stop is a 37.5% premium move (20-40
+  points). Costs are 6-12% of the target.
+dependencies:
+  weekly_expiry: true
+retirement_criteria:
+- OOS expectancy CI upper bound < 0
+- live slippage > 2x assumed over 20 trades
+# Event days (OD-014 default, 2-Oct-2026): NOT certified, so no entries on an EVENT_REGIME day. Setting true needs
+# an event_certification record from validation/event_cert.py (VALIDATED on historical event-day trades, REAL data).
+event_certified: false

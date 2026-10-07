@@ -1,0 +1,54 @@
+# OUR live trading window (IST), separate from the exchange session. Owner decisions OD-002 / OD-003 / OD-007 / OD-008.
+# Semantics: order activity (place/modify/cancel) allowed in [order_activity_start, order_activity_end).
+# New entries allowed in [entry_start, entry_cutoff). Forced flattening from flatten_start. Hard flat at hard_flat.
+# Fields listed in pending_signoff are design defaults NOT yet signed off by the owner.
+# Old versions are kept (never edited) so anything pinned to them stays reproducible.
+
+config_version = "2026-10-01.2"
+current = "TW-2026-10-01.2"
+
+[[window]]
+version = "TW-2026-09-30"           # SUPERSEDED by TW-2026-10-01 (OD-007, OD-008)
+adopted_on = 2026-09-30
+order_activity_start = "09:15:00"
+order_activity_end = "15:00:00"     # OD-002: no order activity at or after 15:00
+entry_start = "09:20:00"            # design default (pending sign-off)
+entry_cutoff = "14:45:00"           # OD-003 (superseded by OD-008)
+flatten_start = "14:50:00"          # design default (pending sign-off at the time)
+hard_flat = "15:00:00"              # OD-002: all positions flat by 15:00
+residual_position_policy = "HALT_AND_ALERT"
+owner_decisions = ["OD-002", "OD-003"]
+pending_signoff = ["entry_start", "flatten_start", "residual_position_policy"]
+
+[[window]]
+version = "TW-2026-10-01"           # SUPERSEDED by TW-2026-10-01.2 (OD-009: same times, entry_start confirmed)
+adopted_on = 2026-10-01
+order_activity_start = "09:15:00"
+order_activity_end = "15:00:00"     # OD-002 (unchanged)
+entry_start = "09:20:00"            # pending at the time; confirmed by OD-009 in TW-2026-10-01.2
+entry_cutoff = "14:00:00"           # OD-008: no new entries at or after 14:00 (supersedes OD-003's 14:45)
+flatten_start = "14:50:00"          # OD-008: owner-confirmed
+hard_flat = "15:00:00"              # OD-002 / OD-008
+# OD-007: if still not flat at 15:00, trigger the broker's Exit-All kill switch (via the adapter) + urgent owner alert.
+# If Exit-All fails or only partly succeeds: halt all trading, keep alerting, POSITION_RECONCILIATION_KILL.
+# Exit-All pricing is UNVERIFIED until tested in the Upstox sandbox. HALT_AND_ALERT remains available as a fallback.
+residual_position_policy = "BROKER_EXIT_ALL"
+residual_policy_owner_decision = "OD-007"
+owner_decisions = ["OD-002", "OD-007", "OD-008"]
+pending_signoff = ["entry_start"]
+
+[[window]]
+version = "TW-2026-10-01.2"
+adopted_on = 2026-10-01
+order_activity_start = "09:15:00"
+order_activity_end = "15:00:00"     # OD-002
+entry_start = "09:20:00"            # OD-009: owner-confirmed
+entry_cutoff = "14:00:00"           # OD-008
+flatten_start = "14:50:00"          # OD-008
+hard_flat = "15:00:00"              # OD-002 / OD-008
+# OD-007: residual at 15:00 -> broker Exit-All + urgent alert; failure -> halt all trading + POSITION_RECONCILIATION_KILL.
+# Exit-All pricing is UNVERIFIED until tested in the Upstox sandbox.
+residual_position_policy = "BROKER_EXIT_ALL"
+residual_policy_owner_decision = "OD-007"
+owner_decisions = ["OD-002", "OD-007", "OD-008", "OD-009"]
+pending_signoff = []

@@ -1,0 +1,124 @@
+# S-GAPGO-001 (docs/research/strategy-hypotheses.md strategy library). RESEARCH: no evidence, no confidence. Param values are pre-registered
+# priors, not fitted numbers. Every number here is ASSUMED until validated on real data.
+id: S-GAPGO-001
+version: 0.1.0
+status: RESEARCH
+owner_agent: research.library
+created: '2026-10-02'
+hypothesis: A NIFTY opening gap of >= 0.5% whose first 30 minutes are a drive in the gap direction continues beyond the
+  opening range in that direction by at least 1.5 R more often than it fails.
+economic_rationale: When overnight information is large and the opening auction does not fully absorb it, institutions keep
+  executing in the gap direction through the morning.
+required_data:
+- dataset: nifty_index_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  availability: UNVERIFIED
+- dataset: nifty_opt_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  - volume
+  availability: UNVERIFIED
+- dataset: india_vix_1m
+  granularity: 1m
+  availability: UNVERIFIED
+signal:
+  formula: gap = open / prev_close - 1 >= gap_min_pct and opening == OPENING_DRIVE and close > OR high -> BUY CE; mirror
+    -> BUY PE
+  params:
+    gap_min_pct:
+      value: 0.5
+      min: 0.3
+      max: 1.0
+      step: 0.1
+    or_window_minutes:
+      value: 30
+      min: 15
+      max: 45
+      step: 15
+legs:
+- side: BUY
+  right: SIGNAL
+eligible_regimes:
+- OPENING_DRIVE
+- GAP_REGIME
+prohibited_regimes:
+- EVENT_REGIME
+- LOW_LIQUIDITY
+- ABNORMAL_MARKET
+- NO_EDGE
+required_regimes:
+- GAP_REGIME
+invalidation_rules:
+- kind: PRICE_LEVEL
+  description: a close back through the opening price (the gap is filling)
+  action: EXIT_POSITION
+- kind: REGIME_CHANGE
+  description: the market turns abnormal
+  action: EXIT_POSITION
+  regimes:
+  - ABNORMAL_MARKET
+- kind: DATA
+  description: 'the index or option bar of a minute is missing: no entry on that minute'
+  action: CANCEL_ENTRY
+selection:
+  expiry: nearest weekly with DTE >= 1
+  strike: ATM (nearest the index); delta band not implemented
+entry:
+  trigger: first close beyond the 30-minute range in the gap direction
+  window_start: 09:45:00
+  window_end: '11:30:00'
+  order:
+    type: LIMIT
+    price_rule: last option close + 1 tick (mid proxy), chase capped at first limit + max_chase_ticks
+    ttl_seconds: 60
+    max_chase_ticks: 2
+  max_entries_per_day: 1  # OD-014 style default (docs/research/strategy-hypotheses.md entry caps): one opening gap a day: the setup exists once
+exit:
+  stop:
+    method: PREMIUM_PCT
+    value: 30
+    order: SL_LIMIT
+    limit_offset_ticks: 4
+  profit_taking: 1.5 R
+  time_exit: '14:00:00'
+  max_holding_minutes: 90
+sizing:
+  method: 1 lot per leg if the summed risk_at_stop <= the per-trade budget (2% NAV) else NO TRADE
+  max_lots: 1
+  risk_at_stop_formula: sum over legs of (entry - stop_limit) * lot + round-trip charges + (entry+stop slippage ticks) *
+    tick * lot
+expected_frequency: 0-2 per week (gap days only)
+expected_slippage:
+  entry_ticks: 1
+  exit_ticks: 1
+  stop_ticks: 2
+  source: assumed
+cost_assumptions:
+  cost_model_version: CM-2026-04-01
+  brokerage_plan: upstox-options
+capacity: high relative to one lot (NIFTY weekly ATM liquidity)
+failure_modes:
+- gaps explained by overnight news that has already been priced
+- IV crush after the open lowers the premium even when direction is right
+falsification_criteria:
+- OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0
+- gap-and-drive days do not continue beyond the OR more often than non-drive gap days
+cost_sensitivity: Gap days have higher IV, so ATM premiums are INR 100-180; a 1.5 R target is 45-80 premium points and costs
+  are 3-6% of it. Spread widening at the open is the larger risk; the entry starts at 09:45 for that reason.
+dependencies:
+  weekly_expiry: true
+retirement_criteria:
+- OOS expectancy CI upper bound < 0
+- live slippage > 2x assumed over 20 trades
+# Event days (OD-014 default, 2-Oct-2026): NOT certified, so no entries on an EVENT_REGIME day. Setting true needs
+# an event_certification record from validation/event_cert.py (VALIDATED on historical event-day trades, REAL data).
+event_certified: false

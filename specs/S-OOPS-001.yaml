@@ -1,0 +1,87 @@
+# H39 (TT-3), promoted 3-Oct-2026 from specs/drafts/top-traders/ unchanged except version (0.1.0 -> 0.2.0) and
+# this note; library plug-in in strategies/library/signals_tt.py, deviations listed there and in
+# Pre-registered before any run.
+# TT-3 (top-traders literature review, kept private). Pre-registration DRAFT at
+# RESEARCH: no evidence, no confidence. Parameter values are pre-registered priors, not fitted. Not backtested.
+# Sources: Larry Williams' "Oops" setup (his books; grade D); our lake's descriptive fact that overnight and intraday
+# NIFTY moves are negatively related (top-traders §5.3: overnight + open-to-close variance shares sum to ~112% of
+# close-to-close variance). Differs from the rejected S-GAPFADE-001: the gap must open BEYOND the previous day's high
+# or low and the entry waits for price to re-enter the previous day's range (failure confirmed), not a fade to the
+# previous close. Prior: LOW.
+# Approximate minimum NAV: one ATM leg ~INR 100-200 x 65 x 30% stop + costs -> ~INR 100k-200k at 2%.
+id: S-OOPS-001
+version: 0.2.0
+status: RESEARCH
+owner_agent: research.toptraders
+created: 2026-10-03
+hypothesis: >
+  When NIFTY opens beyond the previous session's high (low) by at least 0.3% and then, before 11:00, trades back
+  through that previous high (low) into the previous day's range, an option bought against the gap (PE after an up
+  gap, CE after a down gap) on that re-entry has positive net expectancy, and the index continues toward the previous
+  close more often than it re-takes the opening extreme before 14:45.
+economic_rationale: >
+  Overnight gaps beyond yesterday's extreme attract late gap-chasers; when the opening auction's price is rejected
+  and price re-enters yesterday's range, those traders are trapped and their exits push the reversal. Our lake shows
+  overnight gaps partly reverse intraday on average.
+required_data:
+  - {dataset: nifty_index_1m, granularity: 1m, fields: [open, high, low, close], availability: AVAILABLE}
+  - {dataset: nifty_index_1d_from_1m, granularity: 1d, fields: [high, low, close], availability: AVAILABLE}
+  - {dataset: nifty_opt_1m_atm_band, granularity: 1m, fields: [open, high, low, close, volume], availability: AVAILABLE}
+signal:
+  formula: >
+    up gap: open_09:15 >= prev.high x (1 + gap_min_pct); signal when a 1m close <= prev.high before 11:00 -> BUY PE;
+    down gap: open_09:15 <= prev.low x (1 - gap_min_pct); signal when a 1m close >= prev.low before 11:00 -> BUY CE
+  params:
+    gap_min_pct: {value: 0.3, min: 0.1, max: 0.8, step: 0.1}
+legs:
+  - {side: BUY, right: SIGNAL}
+eligible_regimes: [GAP_REGIME, OPENING_REVERSION, MEAN_REVERTING, VOLATILITY_NORMAL]
+prohibited_regimes: [OPENING_DRIVE, EVENT_REGIME, EXPIRY_REGIME, LOW_LIQUIDITY, ABNORMAL_MARKET, NO_EDGE]
+invalidation_rules:
+  - kind: PRICE_LEVEL
+    description: "the index re-takes the opening extreme (the high of the up-gap day so far, or the low of the down-gap day)"
+    action: EXIT_POSITION
+  - kind: TIME
+    description: "no re-entry into the previous day's range by 11:00"
+    action: STAND_DOWN_DAY
+  - kind: REGIME_CHANGE
+    description: "the day becomes an opening drive or abnormal"
+    action: EXIT_POSITION
+    regimes: [OPENING_DRIVE, ABNORMAL_MARKET]
+selection:
+  expiry: "nearest weekly with DTE >= 1"
+  strike: "delta 0.45-0.55 by own IV calc; spread <= 2 ticks"
+entry:
+  trigger: "first 1m close back inside the previous day's range after a qualifying gap"
+  window_start: "09:20:00"
+  window_end: "11:00:00"
+  order: {type: LIMIT, price_rule: "mid + 1 tick, capped at max_price", ttl_seconds: 10, max_chase_ticks: 2}
+  max_entries_per_day: 1
+exit:
+  stop: {method: PREMIUM_PCT, value: 30, order: SL_LIMIT, limit_offset_ticks: 4}
+  profit_taking: "half at the previous close (gap fill); rest on an index trailing stop at half the gap size; else the time exit"
+  time_exit: "14:45:00"
+  max_holding_minutes: 325
+sizing:
+  method: "fixed 1 lot if risk_at_stop <= risk_budget else NO TRADE"
+  max_lots: 1
+  risk_at_stop_formula: "(entry - stop_fill_estimate) * lot + round_trip_costs + slippage_allowance"
+expected_frequency: "gaps beyond the prior extreme of >= 0.3% occur a few times a month; about 1-3 signals a month (prior)"
+expected_slippage: {entry_ticks: 1, exit_ticks: 1, stop_ticks: 2, source: assumed}
+cost_assumptions: {cost_model_version: CM-2026-04-01, brokerage_plan: upstox-options}
+capacity: "high relative to one lot (NIFTY ATM liquidity)"
+failure_modes:
+  - "the average gap reversal is driven by small gaps; large gaps beyond the prior extreme are news-driven and trend"
+  - "the re-entry happens in the first minutes, before 09:20, so the signal is missed or is stale"
+  - "IV collapses after the open, so the option loses even when the index moves the right way"
+falsification_criteria:
+  - "OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0"
+  - "on qualifying days the index reaches the previous close before re-taking the opening extreme in <= 50% of cases"
+cost_sensitivity: >
+  Morning ATM premiums after a gap are about INR 100-200 (IV is elevated); a 30% stop risks about INR 1,950-3,900 a
+  lot, so a round trip of about INR 50-70 is 2-4% of the risk. The IV crush after gaps is the main cost to check.
+dependencies: {weekly_expiry: true}
+retirement_criteria:
+  - "OOS expectancy CI upper bound < 0"
+  - "live slippage > 2x assumed over 20 trades"
+event_certified: false

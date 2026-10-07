@@ -1,0 +1,28 @@
+# Portfolio allocator (S-05, docs/research/strategy-hypotheses.md "Portfolio allocator v1"). Versioned; any change = git commit + owner approval.
+# Every number is ASSUMED (a design default, not fitted). The loader picks the latest adopted_on unless a version
+# is requested. The allocator only ever LOWERS risk: the Governor's limits (configs/risk/limits.toml) stay the
+# binding ceiling, and nothing here can raise a per-trade budget above per_trade_max_loss_frac.
+
+[[allocator]]
+version = "AL-2026-10-02.1"
+adopted_on = 2026-10-02
+status = "ASSUMED"
+
+per_trade_frac = "0.02"            # ceiling per strategy per trade (OD-005: 2% of NAV)
+daily_risk_frac = "0.04"           # the day's risk budget shared equally among eligible strategies (daily stop 4%)
+max_concurrent_positions = 1       # canary: one position at a time (limits.toml max_lots = 1)
+
+# auto-decrease rules (each halves the budget; they compound)
+consecutive_losses_halve = 3       # >= 3 losing trades in a row
+drawdown_halve_frac = "0.05"       # the strategy's own drawdown >= 5% of NAV
+slippage_halve_multiple = "1.5"    # realised / assumed slippage >= 1.5x
+slippage_zero_multiple = "2"       # >= 2x: no budget (matches the strategy slippage kill, docs/risk/risk-engine.md §9.4)
+degraded_multiplier = "0.5"        # a DEGRADED strategy trades at half size until it recovers or is quarantined
+
+# Mutually exclusive strategies: within a group only the first eligible one (in priority order) gets a budget.
+# H01 (breakout) and H02 (failed breakout) are mirror images (docs/research/strategy-hypotheses.md H02 failure modes); so are the gap pair.
+exclusive_groups = [
+  ["S-ORB-001", "S-FBO-001"],
+  ["S-GAPGO-001", "S-GAPFADE-001"],
+  ["S-VWAPC-001", "S-VWAPMR-001"],
+]

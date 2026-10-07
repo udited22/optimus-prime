@@ -1,0 +1,128 @@
+# S-VWAPMR-001 (docs/research/strategy-hypotheses.md strategy library). RESEARCH: no evidence, no confidence. Param values are pre-registered
+# priors, not fitted numbers. Every number here is ASSUMED until validated on real data.
+id: S-VWAPMR-001
+version: 0.1.0
+status: RESEARCH
+owner_agent: research.library
+created: '2026-10-02'
+hypothesis: On range days with low realised volatility, a deviation of NIFTY from session VWAP beyond 1.5 sigma that starts
+  to turn reverts to VWAP within 20 minutes more often than it extends to 2.5 sigma.
+economic_rationale: In low-volatility regimes liquidity providers and short-gamma option writers hedge in a mean-reverting
+  way, buying dips and selling rallies.
+required_data:
+- dataset: nifty_index_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  availability: UNVERIFIED
+- dataset: nifty_opt_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  - volume
+  availability: UNVERIFIED
+- dataset: india_vix_1m
+  granularity: 1m
+  availability: UNVERIFIED
+signal:
+  formula: z = (close - VWAP) / sd(close - VWAP); z >= entry_sigma and a down bar -> BUY PE; z <= -entry_sigma and an up
+    bar -> BUY CE
+  params:
+    entry_sigma:
+      value: 1.5
+      min: 1.2
+      max: 2.0
+      step: 0.1
+    stop_sigma:
+      value: 2.5
+      min: 2.0
+      max: 3.0
+      step: 0.1
+legs:
+- side: BUY
+  right: SIGNAL
+eligible_regimes:
+- MEAN_REVERTING
+- VOLATILITY_COMPRESSION
+- VOLATILITY_NORMAL
+prohibited_regimes:
+- EVENT_REGIME
+- LOW_LIQUIDITY
+- ABNORMAL_MARKET
+- NO_EDGE
+- GAP_REGIME
+invalidation_rules:
+- kind: PRICE_LEVEL
+  description: the deviation extends to stop_sigma
+  action: EXIT_POSITION
+- kind: REGIME_CHANGE
+  description: volatility expands or the market turns abnormal
+  action: EXIT_POSITION
+  regimes:
+  - VOLATILITY_EXPANSION
+  - ABNORMAL_MARKET
+- kind: TIME
+  description: no VWAP touch within 20 minutes (the maximum hold)
+  action: EXIT_POSITION
+- kind: DATA
+  description: 'the index or option bar of a minute is missing: no entry on that minute'
+  action: CANCEL_ENTRY
+selection:
+  expiry: nearest weekly with DTE >= 1
+  strike: ATM (nearest the index); delta band not implemented
+entry:
+  trigger: stretched bar that closes back toward VWAP
+  window_start: 09:45:00
+  window_end: '13:30:00'
+  order:
+    type: LIMIT
+    price_rule: last option close + 1 tick (mid proxy), chase capped at first limit + max_chase_ticks
+    ttl_seconds: 60
+    max_chase_ticks: 2
+  max_entries_per_day: 2  # OD-014 style default (docs/research/strategy-hypotheses.md entry caps): range days give repeated stretches, but this is the library's most cost-sensitive spec: 2, not 3
+exit:
+  stop:
+    method: PREMIUM_PCT
+    value: 25
+    order: SL_LIMIT
+    limit_offset_ticks: 4
+  profit_taking: VWAP touch (plug-in target)
+  time_exit: '14:30:00'
+  max_holding_minutes: 20
+sizing:
+  method: 1 lot per leg if the summed risk_at_stop <= the per-trade budget (2% NAV) else NO TRADE
+  max_lots: 1
+  risk_at_stop_formula: sum over legs of (entry - stop_limit) * lot + round-trip charges + (entry+stop slippage ticks) *
+    tick * lot
+expected_frequency: 2-4 signals/week on range days (prior)
+expected_slippage:
+  entry_ticks: 1
+  exit_ticks: 1
+  stop_ticks: 2
+  source: assumed
+cost_assumptions:
+  cost_model_version: CM-2026-04-01
+  brokerage_plan: upstox-options
+capacity: high relative to one lot (NIFTY weekly ATM liquidity)
+failure_modes:
+- a regime flip into trend
+- 'theta: buying options in low vol needs the move fast'
+falsification_criteria:
+- OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0
+- the 20-minute VWAP-touch rate after a 1.5 sigma stretch is not above that of a random entry at the same deviation
+cost_sensitivity: Low-vol ATM premiums are INR 40-80, so a 1.5 sigma reversion of 20-40 index points is 10-20 premium points;
+  round-trip costs plus 3 ticks/side are 25-40% of that. The most cost-sensitive spec in the library.
+dependencies:
+  weekly_expiry: true
+retirement_criteria:
+- OOS expectancy CI upper bound < 0
+- live slippage > 2x assumed over 20 trades
+# Event days (OD-014 default, 2-Oct-2026): NOT certified, so no entries on an EVENT_REGIME day. Setting true needs
+# an event_certification record from validation/event_cert.py (VALIDATED on historical event-day trades, REAL data).
+event_certified: false

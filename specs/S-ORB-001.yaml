@@ -1,0 +1,81 @@
+# Example authored spec for H01 (docs/research/strategy-hypotheses.md). RESEARCH status: no evidence, no confidence. Param values are the
+# hypothesis priors from docs/research/strategy-hypotheses.md, not fitted numbers.
+id: S-ORB-001
+version: 0.1.0
+status: RESEARCH
+owner_agent: research.momentum
+created: 2026-09-30
+hypothesis: >
+  When NIFTY futures close a 5-min bar beyond the 09:15-09:30 opening range, with volume >= 1.5x its 20-day
+  same-time median and India VIX not falling, the index keeps moving in the breakout direction >= 0.4 x OR-width
+  within 60 min more often than a volatility-matched random entry does.
+economic_rationale: >
+  Opening-range breaks aggregate overnight information and institutional order flow that executes over the morning.
+required_data:
+  - dataset: nifty_fut_1m
+    granularity: 1m
+    fields: [open, high, low, close, volume]
+    availability: UNCERTAIN  # expired-futures intraday history from Dhan is UNVERIFIED (docs/architecture/historical-data.md)
+    substitute: "NIFTY index 1m bars; the volume filter is replaced by a 30-min range-expansion filter (H01-NV)"
+  - {dataset: nifty_opt_quotes, granularity: 1s, fields: [bid, ask, ltp, oi]}
+  - {dataset: india_vix_1m, granularity: 1m}
+signal:
+  formula: "bullish if close_5m > OR_high and vol_ratio >= theta_v and dVIX_30m >= 0 -> BUY CE; mirror -> BUY PE"
+  params:
+    or_window_minutes: {value: 15, min: 15, max: 30, step: 15}
+    theta_v: {value: 1.5, min: 1.2, max: 2.0, step: 0.1}
+    stop_or_fraction: {value: 0.25, min: 0.15, max: 0.40, step: 0.05}
+legs:
+  - {side: BUY, right: SIGNAL}
+eligible_regimes: [TRENDING_UP, TRENDING_DOWN, VOLATILITY_EXPANSION, GAP_REGIME]
+prohibited_regimes: [EVENT_REGIME, LOW_LIQUIDITY, ABNORMAL_MARKET, NO_EDGE]
+invalidation_rules:
+  - kind: PRICE_LEVEL
+    description: "a 5-min close back inside the opening range invalidates the breakout"
+    action: EXIT_POSITION
+  - kind: REGIME_CHANGE
+    description: "the trend flips to range-bound or the market turns abnormal"
+    action: EXIT_POSITION
+    regimes: [MEAN_REVERTING, ABNORMAL_MARKET]
+  - kind: TIME
+    description: "no 0.4 x OR-width follow-through within 60 minutes of entry"
+    action: EXIT_POSITION
+selection:
+  expiry: "nearest weekly with DTE >= 1"
+  strike: "delta 0.40-0.55 by own IV calc; spread <= 2 ticks"
+entry:
+  trigger: "first qualifying 5-min close after the opening range"
+  window_start: "09:30:00"
+  window_end: "13:00:00"
+  order: {type: LIMIT, price_rule: "mid + 1 tick, capped at max_price", ttl_seconds: 10, max_chase_ticks: 2}
+  max_entries_per_day: 1  # OD-014 style default (docs/research/strategy-hypotheses.md entry caps): one opening range a day: a re-entry would be the failed-breakout mirror (S-FBO-001)
+exit:
+  stop: {method: PREMIUM_PCT, value: 30, order: SL_LIMIT, limit_offset_ticks: 4}
+  profit_taking: "1.5 R or trailing at the 15-min swing"
+  time_exit: "14:30:00"
+  max_holding_minutes: 75
+sizing:
+  method: "fixed 1 lot if risk_at_stop <= risk_budget else NO TRADE"
+  max_lots: 1
+  risk_at_stop_formula: "(entry - stop_fill_estimate) * lot + round_trip_costs + slippage_allowance"
+expected_frequency: "1-3 signals/week (prior)"
+expected_slippage: {entry_ticks: 1, exit_ticks: 1, stop_ticks: 2, source: assumed}
+cost_assumptions: {cost_model_version: CM-2026-04-01, brokerage_plan: upstox-options}
+capacity: "high relative to one lot (NIFTY ATM liquidity)"
+failure_modes:
+  - "false breakouts in range regimes"
+  - "IV crush after the open"
+falsification_criteria:
+  - "OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0"
+  - "the 60-min follow-through rate is not above a volatility-matched random entry's (p >= 0.10)"
+cost_sensitivity: >
+  An ATM premium of INR 70-130 with a 30% stop risks about INR 1,400-2,500 per lot; INR 40 brokerage plus statutory
+  charges and 2 ticks/side slippage cost about INR 50-70 a round trip, i.e. 3-5% of the risk. The edge must survive
+  2x slippage (docs/research/validation.md V5).
+dependencies: {weekly_expiry: true}
+retirement_criteria:
+  - "OOS expectancy CI upper bound < 0"
+  - "live slippage > 2x assumed over 20 trades"
+# Event days (OD-014 default, 2-Oct-2026): NOT certified, so no entries on an EVENT_REGIME day. Setting true needs
+# an event_certification record from validation/event_cert.py (VALIDATED on historical event-day trades, REAL data).
+event_certified: false

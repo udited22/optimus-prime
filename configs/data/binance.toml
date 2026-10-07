@@ -1,0 +1,22 @@
+# Binance public market data (DATA ONLY, no API key, no account). NON-SECRET configuration.
+# Primary source: the bulk archive https://data.binance.vision (Binance's public data dump; every file has a
+# .CHECKSUM sidecar with its SHA-256; https://github.com/binance/binance-public-data). Listing is the public S3
+# bucket behind it. Fallback for spot klines: the market-data-only REST host data-api.binance.vision
+# (GET /api/v3/klines, /api/v3/exchangeInfo; https://developers.binance.com/docs/binance-spot-api-docs/rest-api).
+# api.binance.com and fapi.binance.com answer HTTP 451 ("restricted location") from the box (checked
+# 3-Oct-2026 21:50 IST), so the USD-M REST fallback is not reachable from here; the archive covers it.
+version = "BINANCE-2026-10-03.1"
+archive_base = "https://data.binance.vision"
+listing_base = "https://s3-ap-northeast-1.amazonaws.com/data.binance.vision"
+rest_base = "https://data-api.binance.vision"
+allowed_hosts = ["data.binance.vision", "s3-ap-northeast-1.amazonaws.com", "data-api.binance.vision"]
+
+# Politeness: the archive is a static CDN; we stay at a few requests per second per process and a daily cap.
+# The REST fallback has a 6,000 request-weight/minute IP limit (klines weight 2); we stay far below it.
+requests_per_second = 4
+requests_per_day = 90000
+http_timeout_seconds = "120"
+retry_server_max_attempts = 4
+retry_rate_limit_max_attempts = 6
+backoff_base_seconds = "2"
+backoff_cap_seconds = "120"

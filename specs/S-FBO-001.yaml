@@ -1,0 +1,137 @@
+# S-FBO-001 (docs/research/strategy-hypotheses.md strategy library). RESEARCH: no evidence, no confidence. Param values are pre-registered
+# priors, not fitted numbers. Every number here is ASSUMED until validated on real data.
+id: S-FBO-001
+version: 0.1.0
+status: RESEARCH
+owner_agent: research.library
+created: '2026-10-02'
+hypothesis: A close beyond the 09:15-09:30 opening range that is back inside by >= 0.2 x OR-width within 15 minutes is followed
+  by a move to the range midpoint more often than chance.
+economic_rationale: Stops clustered beyond obvious levels are run, liquidity providers absorb them, and trapped breakout
+  traders then exit, pushing price back across the range.
+required_data:
+- dataset: nifty_index_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  availability: UNVERIFIED
+- dataset: nifty_opt_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  - volume
+  availability: UNVERIFIED
+- dataset: india_vix_1m
+  granularity: 1m
+  availability: UNVERIFIED
+signal:
+  formula: break = close beyond OR by min_break_frac x w; failure = close back inside by reentry_depth x w within window_minutes
+    -> BUY PE after an up-break, BUY CE after a down-break
+  params:
+    or_window_minutes:
+      value: 15
+      min: 15
+      max: 30
+      step: 15
+    min_break_frac:
+      value: 0.1
+      min: 0.05
+      max: 0.3
+      step: 0.05
+    reentry_depth:
+      value: 0.2
+      min: 0.1
+      max: 0.3
+      step: 0.05
+    window_minutes:
+      value: 15
+      min: 10
+      max: 25
+      step: 5
+legs:
+- side: BUY
+  right: SIGNAL
+eligible_regimes:
+- MEAN_REVERTING
+- VOLATILITY_COMPRESSION
+- VOLATILITY_NORMAL
+prohibited_regimes:
+- EVENT_REGIME
+- LOW_LIQUIDITY
+- ABNORMAL_MARKET
+- NO_EDGE
+invalidation_rules:
+- kind: PRICE_LEVEL
+  description: a close beyond the failed-break extreme (the break was real after all)
+  action: EXIT_POSITION
+- kind: REGIME_CHANGE
+  description: volatility expands or the market turns abnormal
+  action: EXIT_POSITION
+  regimes:
+  - VOLATILITY_EXPANSION
+  - ABNORMAL_MARKET
+- kind: TIME
+  description: no move to the midpoint within the 60-minute maximum hold
+  action: EXIT_POSITION
+- kind: DATA
+  description: 'the index or option bar of a minute is missing: no entry on that minute'
+  action: CANCEL_ENTRY
+selection:
+  expiry: nearest weekly with DTE >= 1
+  strike: ATM (nearest the index); delta band not implemented
+entry:
+  trigger: first failed break of the day
+  window_start: 09:30:00
+  window_end: '13:00:00'
+  order:
+    type: LIMIT
+    price_rule: last option close + 1 tick (mid proxy), chase capped at first limit + max_chase_ticks
+    ttl_seconds: 60
+    max_chase_ticks: 2
+  max_entries_per_day: 2  # OD-014 style default (docs/research/strategy-hypotheses.md entry caps): the opening range can fail on both sides (one up, one down)
+exit:
+  stop:
+    method: PREMIUM_PCT
+    value: 30
+    order: SL_LIMIT
+    limit_offset_ticks: 4
+  profit_taking: range midpoint (plug-in target); no R target
+  time_exit: '14:30:00'
+  max_holding_minutes: 60
+sizing:
+  method: 1 lot per leg if the summed risk_at_stop <= the per-trade budget (2% NAV) else NO TRADE
+  max_lots: 1
+  risk_at_stop_formula: sum over legs of (entry - stop_limit) * lot + round-trip charges + (entry+stop slippage ticks) *
+    tick * lot
+expected_frequency: 1-2 signals/week (prior)
+expected_slippage:
+  entry_ticks: 1
+  exit_ticks: 1
+  stop_ticks: 2
+  source: assumed
+cost_assumptions:
+  cost_model_version: CM-2026-04-01
+  brokerage_plan: upstox-options
+capacity: high relative to one lot (NIFTY weekly ATM liquidity)
+failure_modes:
+- 'it is the mirror of H01: in trend regimes it fades real breakouts'
+- the midpoint target is small relative to costs on narrow ranges
+falsification_criteria:
+- OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0
+- the midpoint-reached rate after a failed break is not above the unconditional rate for the same time of day
+cost_sensitivity: The target (range midpoint) is about half an OR-width, typically 30-60 index points or 15-30 premium points
+  at delta 0.5; a round trip costs about INR 50-70 plus 2-3 ticks of slippage per side. Narrow-range days make it cost-dominated.
+dependencies:
+  weekly_expiry: true
+retirement_criteria:
+- OOS expectancy CI upper bound < 0
+- live slippage > 2x assumed over 20 trades
+# Event days (OD-014 default, 2-Oct-2026): NOT certified, so no entries on an EVENT_REGIME day. Setting true needs
+# an event_certification record from validation/event_cert.py (VALIDATED on historical event-day trades, REAL data).
+event_certified: false

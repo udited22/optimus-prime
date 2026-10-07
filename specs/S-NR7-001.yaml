@@ -1,0 +1,87 @@
+# H38 (TT-2), promoted 3-Oct-2026 from specs/drafts/top-traders/ unchanged except version (0.1.0 -> 0.2.0) and
+# this note; library plug-in in strategies/library/signals_tt.py, deviations listed there and in
+# Pre-registered before any run.
+# TT-2 (top-traders literature review, kept private). Pre-registration DRAFT at
+# RESEARCH: no evidence, no confidence. Parameter values are pre-registered priors, not fitted. Not backtested.
+# Sources: narrow-range / volatility-contraction setups (Crabel 1990; Raschke & Connors, Street Smarts 1995;
+# Minervini's contraction bases; all grade D); volatility clustering (grade A for forecasting volatility, not
+# direction); our own positive finding that vol-regime labels forecast realised volatility (H25/H26). Directional
+# breakout, not a straddle: kept separate from the other worker's volatility-based long-option ideas. Prior: LOW.
+# Approximate minimum NAV: one ATM leg ~INR 100-180 x 65 x 30% stop + costs -> ~INR 100k-180k at 2%.
+id: S-NR7-001
+version: 0.2.0
+status: RESEARCH
+owner_agent: research.toptraders
+created: 2026-10-03
+hypothesis: >
+  After a session whose high-low range is the narrowest of the last 7 sessions (NR7), the first 1-minute close beyond
+  the NR7 session's high (or low) between 09:30 and 12:00 is followed by a larger move in the breakout direction by
+  14:45 than a breakout of the previous day's range on non-NR7 days, and an ATM option bought on that close has
+  positive net expectancy.
+economic_rationale: >
+  Volatility clusters and mean-reverts: a contraction is usually followed by expansion. Stops and pending orders
+  accumulate just outside a narrow range, so the first break can trigger a run. The direction is not forecast by the
+  contraction itself; the trade only buys the first break.
+required_data:
+  - {dataset: nifty_index_1m, granularity: 1m, fields: [open, high, low, close], availability: AVAILABLE}
+  - {dataset: nifty_index_1d_from_1m, granularity: 1d, fields: [high, low], availability: AVAILABLE}
+  - {dataset: nifty_opt_1m_atm_band, granularity: 1m, fields: [open, high, low, close, volume], availability: AVAILABLE}
+signal:
+  formula: >
+    nr7 = range(prev session) == min(range of the last nr_lookback sessions); if nr7: first 1m close in 09:30-12:00
+    above prev.high + buffer -> BUY CE; below prev.low - buffer -> BUY PE; buffer = buffer_frac x prev range
+  params:
+    nr_lookback: {value: 7, min: 4, max: 10, step: 1}
+    buffer_frac: {value: 0.1, min: 0.0, max: 0.3, step: 0.1}
+legs:
+  - {side: BUY, right: SIGNAL}
+eligible_regimes: [VOLATILITY_COMPRESSION, VOLATILITY_NORMAL, TRENDING_UP, TRENDING_DOWN]
+prohibited_regimes: [EVENT_REGIME, EXPIRY_REGIME, LOW_LIQUIDITY, ABNORMAL_MARKET, NO_EDGE]
+invalidation_rules:
+  - kind: PRICE_LEVEL
+    description: "the index closes a 1m bar back inside the NR7 session's range"
+    action: EXIT_POSITION
+  - kind: TIME
+    description: "no breakout by 12:00"
+    action: STAND_DOWN_DAY
+  - kind: REGIME_CHANGE
+    description: "the market turns abnormal"
+    action: EXIT_POSITION
+    regimes: [ABNORMAL_MARKET]
+selection:
+  expiry: "nearest weekly with DTE >= 1"
+  strike: "delta 0.45-0.55 by own IV calc; spread <= 2 ticks"
+entry:
+  trigger: "first 1m close beyond the NR7 session's high or low plus buffer"
+  window_start: "09:30:00"
+  window_end: "12:00:00"
+  order: {type: LIMIT, price_rule: "mid + 1 tick, capped at max_price", ttl_seconds: 10, max_chase_ticks: 2}
+  max_entries_per_day: 1
+exit:
+  stop: {method: PREMIUM_PCT, value: 30, order: SL_LIMIT, limit_offset_ticks: 4}
+  profit_taking: "none fixed: trail the index at the NR7 range width from the best price since entry; else the time exit"
+  time_exit: "14:45:00"
+  max_holding_minutes: 315
+sizing:
+  method: "fixed 1 lot if risk_at_stop <= risk_budget else NO TRADE"
+  max_lots: 1
+  risk_at_stop_formula: "(entry - stop_fill_estimate) * lot + round_trip_costs + slippage_allowance"
+expected_frequency: "NR7 days are about 1 in 7 by construction; about 2-3 signals a month (prior)"
+expected_slippage: {entry_ticks: 1, exit_ticks: 1, stop_ticks: 2, source: assumed}
+cost_assumptions: {cost_model_version: CM-2026-04-01, brokerage_plan: upstox-options}
+capacity: "high relative to one lot (NIFTY ATM liquidity)"
+failure_modes:
+  - "the expansion happens overnight (gap through the range at the open), not intraday after 09:30"
+  - "first breaks fail and reverse (the Turtle Soup effect); S-FBO-001 already found no edge in failed breaks either"
+  - "IV rises before the break and the option is already expensive"
+falsification_criteria:
+  - "OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0"
+  - "the 14:45 move in the breakout direction after NR7 breaks is not larger than after non-NR7 prior-range breaks (p >= 0.10)"
+cost_sensitivity: >
+  Morning ATM premiums are about INR 100-180; a 30% stop risks about INR 1,950-3,500 a lot, so a round trip of about
+  INR 50-70 is 2-4% of the risk. Rare signals mean the test has few trades; the CI, not the point estimate, decides.
+dependencies: {weekly_expiry: true}
+retirement_criteria:
+  - "OOS expectancy CI upper bound < 0"
+  - "live slippage > 2x assumed over 20 trades"
+event_certified: false

@@ -1,0 +1,133 @@
+# S-IVRV-001 (docs/research/strategy-hypotheses.md strategy library). RESEARCH: no evidence, no confidence. Param values are pre-registered
+# priors, not fitted numbers. Every number here is ASSUMED until validated on real data.
+id: S-IVRV-001
+version: 0.1.0
+status: RESEARCH
+owner_agent: research.library
+created: '2026-10-02'
+hypothesis: When India VIX (as a proxy for ATM weekly IV) is below trailing intraday realised volatility by more than 2
+  vol points, a single ATM option bought in the direction of the VWAP side and 15-minute momentum has higher net expectancy
+  than the same entry when IV >= RV.
+economic_rationale: The variance risk premium is usually positive and favours option sellers, who are prohibited here (OD-006);
+  the only use of it is to buy premium only when it is conditionally cheap.
+required_data:
+- dataset: nifty_index_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  availability: UNVERIFIED
+- dataset: nifty_opt_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  - volume
+  availability: UNVERIFIED
+- dataset: india_vix_1m
+  granularity: 1m
+  availability: UNVERIFIED
+- dataset: nifty_atm_iv_1m
+  granularity: 1m
+  availability: UNAVAILABLE
+  substitute: India VIX as the ATM IV proxy until D-11 (own Black-76 IV) is built
+signal:
+  formula: RV = stdev(1-min log returns over rv_minutes) annualised; VIX < RV - iv_discount_pts and close > VWAP and 15-min
+    return > 0 -> BUY CE; mirror -> BUY PE
+  params:
+    rv_minutes:
+      value: 60
+      min: 30
+      max: 120
+      step: 15
+    iv_discount_pts:
+      value: 2
+      min: 0
+      max: 5
+      step: 0.5
+    start_minute:
+      value: 75
+      min: 60
+      max: 120
+      step: 15
+legs:
+- side: BUY
+  right: SIGNAL
+eligible_regimes:
+- VOLATILITY_NORMAL
+- VOLATILITY_EXPANSION
+prohibited_regimes:
+- EVENT_REGIME
+- LOW_LIQUIDITY
+- ABNORMAL_MARKET
+- NO_EDGE
+invalidation_rules:
+- kind: PRICE_LEVEL
+  description: the index closes back across VWAP (the direction filter flips)
+  action: EXIT_POSITION
+- kind: REGIME_CHANGE
+  description: the market turns abnormal
+  action: EXIT_POSITION
+  regimes:
+  - ABNORMAL_MARKET
+- kind: DATA
+  description: 'the index or option bar of a minute is missing: no entry on that minute'
+  action: CANCEL_ENTRY
+selection:
+  expiry: nearest weekly with DTE >= 1
+  strike: ATM (nearest the index); delta band not implemented
+entry:
+  trigger: first cheap-gamma bar after 10:30
+  window_start: '10:30:00'
+  window_end: '13:30:00'
+  order:
+    type: LIMIT
+    price_rule: last option close + 1 tick (mid proxy), chase capped at first limit + max_chase_ticks
+    ttl_seconds: 60
+    max_chase_ticks: 2
+  max_entries_per_day: 1  # OD-014 style default (docs/research/strategy-hypotheses.md entry caps): one cheap-gamma view of the day's IV versus RV
+exit:
+  stop:
+    method: PREMIUM_PCT
+    value: 30
+    order: SL_LIMIT
+    limit_offset_ticks: 4
+  profit_taking: 1.5 R
+  time_exit: '14:30:00'
+  max_holding_minutes: 60
+sizing:
+  method: 1 lot per leg if the summed risk_at_stop <= the per-trade budget (2% NAV) else NO TRADE
+  max_lots: 1
+  risk_at_stop_formula: sum over legs of (entry - stop_limit) * lot + round-trip charges + (entry+stop slippage ticks) *
+    tick * lot
+expected_frequency: 'rare: 0-2 signals/week (prior)'
+expected_slippage:
+  entry_ticks: 1
+  exit_ticks: 1
+  stop_ticks: 2
+  source: assumed
+cost_assumptions:
+  cost_model_version: CM-2026-04-01
+  brokerage_plan: upstox-options
+capacity: high relative to one lot (NIFTY weekly ATM liquidity)
+failure_modes:
+- the conditioning adds nothing over the direction filter
+- VIX is a 30-day index, not the weekly ATM IV
+- RV forecast error is large
+falsification_criteria:
+- OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0
+- the IV < RV subset does not beat the IV >= RV subset of the same directional rule (paired comparison)
+cost_sensitivity: Costs are the same as any ATM entry (INR 50-70 a round trip); the hypothesis is about the price paid for
+  gamma, so it must be reported against the unconditioned version net of identical costs.
+dependencies:
+  weekly_expiry: true
+retirement_criteria:
+- OOS expectancy CI upper bound < 0
+- live slippage > 2x assumed over 20 trades
+# Event days (OD-014 default, 2-Oct-2026): NOT certified, so no entries on an EVENT_REGIME day. Setting true needs
+# an event_certification record from validation/event_cert.py (VALIDATED on historical event-day trades, REAL data).
+event_certified: false

@@ -1,0 +1,83 @@
+# NIFTY F&O market-lot history, keyed by CONTRACT (expiry + cycle) and TRADE DATE.
+# Lot revisions apply per contract, not per calendar date: existing weekly/monthly contracts usually keep the old lot until
+# they expire, while pre-existing long-dated (quarterly / half-yearly) contracts switch on a stated EOD.
+# Resolution for a contract expiring E (cycle WEEKLY or MONTHLY) on trade date T, per revision R (in order):
+#   E <= R.last_old_<cycle>                                             -> old lot
+#   cycle in R.carryover_cycles and E >= R.carryover_min_expiry and T <= R.carryover_until_eod -> old lot
+#   E > R.last_old_<cycle> and T < R.effective_trade_date (and not carried over) -> ERROR (no such contract under R)
+#   otherwise                                                           -> new lot
+# The instrument master (point-in-time vendor files) stays authoritative when available; this table is for expired
+# contracts whose historical vendor data carries no lot size (e.g. Dhan rolling-option candles).
+underlying = "NIFTY"
+version = "LOT-NIFTY-2026-10-02.1"
+coverage_from_expiry = 2021-01-01
+known_through_trade_date = 2026-10-02   # NSE fo_mktlots.csv fetched 2-Oct-2026: NIFTY 65 for every listed expiry month
+# known-through evidence: Upstox + Kite instrument files of 30-Sep-2026 (65 for every NIFTY contract), and NSE's
+# official market-lot file nsearchives.nseindia.com/content/fo/fo_mktlots.csv fetched 2-Oct-2026 ~18:00 IST: NIFTY 65 for
+# OCT-26, NOV-26, DEC-26 and MAR-27 .. JUN-31 (no pending revision shown). Extend only on new official evidence.
+base_lot = 75
+base_sources = ["NSE/FAOP/47854 (31-Mar-2021): NIFTY present market lot 75"]
+
+[[revision]]
+id = "NSE-FAOP-47854"
+old_lot = 75
+new_lot = 50
+effective_trade_date = 2021-04-30
+last_old_weekly = 2021-07-22        # 'Contracts with August 2021 Weekly expiry & beyond will have revised market lots'
+first_new_weekly = 2021-08-05
+last_old_monthly = 2021-06-24       # May and June 2021 keep 75; 'July 2021 monthly expiry and beyond' revised
+first_new_monthly = 2021-07-29
+carryover_cycles = ["MONTHLY"]
+carryover_min_expiry = 2021-09-01   # existing long-term options (> 3 months)
+carryover_until_eod = 2021-06-24    # 'revised from 75 to 50 after expiry of June 2021 contracts (i.e. June 25, 2021)'
+verified = true
+sources = ["NSE/FAOP/47854 (31-Mar-2021), archives.nseindia.com/content/circulars/FAOP47854.pdf", "CNBC-TV18, 31-Mar-2021: NSE slashes Nifty50 lot size to 50 from 75"]
+notes = "Dates of the first/last affected expiries are derived from the circular wording with the Thursday rule and the 2021 holiday book (the circular names months, not dates). The circular's 'June 25, 2021' is read as the first trade date after the June expiry (24-Jun-2021)."
+
+[[revision]]
+id = "NSE-2024-04-26"
+old_lot = 50
+new_lot = 25
+effective_trade_date = 2024-04-26
+last_old_weekly = 2024-04-18
+first_new_weekly = 2024-05-02
+last_old_monthly = 2024-04-25       # 'no revision in market lot of monthly expiry of April 2024 expiring on April 25, 2024'
+first_new_monthly = 2024-05-30
+carryover_cycles = ["WEEKLY", "MONTHLY"]
+carryover_min_expiry = 2024-04-26   # ALL contracts available from trade date 26-Apr-2024 carry the revised lot
+carryover_until_eod = 2024-04-25
+verified = true
+sources = ["NSE circular 'Revision in Market Lot of Derivative Contracts on Indices' effective 26-Apr-2024 (steelcitynettrade.com mirror)", "Zerodha bulletin 375282 (02-Apr-2024); Economic Times; Reuters 02-Apr-2024"]
+notes = "First weekly with lot 25: 2-May-2024; first monthly: 30-May-2024 (circular)."
+
+[[revision]]
+id = "NSE-FAOP-64625"
+old_lot = 25
+new_lot = 75
+effective_trade_date = 2024-11-21   # NSE/FAOP/64990: moved from 20-Nov-2024 (Maharashtra election holiday)
+last_old_weekly = 2024-12-19
+first_new_weekly = 2025-01-02
+last_old_monthly = 2025-01-30
+first_new_monthly = 2025-02-27
+carryover_cycles = ["MONTHLY"]
+carryover_min_expiry = 2025-03-01   # existing quarterly / half-yearly contracts (Mar-2025 onward)
+carryover_until_eod = 2024-12-26
+verified = true
+sources = ["NSE/FAOP/64625 (18-Oct-2024) + corrigendum NSE/FAOP/64672 + update NSE/FAOP/64990 (08-Nov-2024)", "Zerodha Z-Connect 'SEBI's new rules for index derivatives'; Kotak Neo bulletin; Moneycontrol 21-Oct-2024"]
+notes = "The 26-Dec-2024 monthly and the 30-Jan-2025 monthly keep lot 25; weeklies from 2-Jan-2025 are 75."
+
+[[revision]]
+id = "NSE-FAOP-70616"
+old_lot = 75
+new_lot = 65
+effective_trade_date = 2025-10-29   # 'comes into effect from October 28, 2025 (EOD)'
+last_old_weekly = 2025-12-23
+first_new_weekly = 2026-01-06
+last_old_monthly = 2025-12-30
+first_new_monthly = 2026-01-27
+carryover_cycles = ["MONTHLY"]
+carryover_min_expiry = 2026-03-01   # existing quarterly / half-yearly contracts (Mar-2026 onward)
+carryover_until_eod = 2025-12-30
+verified = true
+sources = ["NSE/FAOP/70616 (Oct-2025), nsearchives.nseindia.com/content/circulars/FAOP70616.pdf", "exchangecirculars.com summary 03-Oct-2025; Arihant Plus; Ventura Securities"]
+notes = "30-Sep-2026 Upstox and Kite instrument files show lot 65 for every listed NIFTY contract (cross-checked in tests)."

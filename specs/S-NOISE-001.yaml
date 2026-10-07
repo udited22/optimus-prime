@@ -1,0 +1,89 @@
+# H20 (docs/research/institutional-intelligence-layer.md §5). RESEARCH: no evidence, no confidence. Param
+# values are pre-registered priors (the source paper's 14-day lookback and multiplier 1), not fitted numbers.
+# Source: Zarattini, Aziz & Barbon, "Beat the Market: An Effective Intraday Momentum Strategy for S&P500 ETF (SPY)"
+# (SSRN 4824172).
+# Approximate minimum NAV: one ATM leg ~INR 70-130 x 65 x 30% stop + costs -> ~INR 70k-1.3 lakh.
+# Promoted from specs/drafts/ on 3-Oct-2026 once its library plug-in (strategies/library/signals_intel.py) and its
+# entry-cap row (docs/research/strategy-hypotheses.md) existed. Still RESEARCH: no evidence, no confidence.
+id: S-NOISE-001
+version: 0.1.0
+status: RESEARCH
+owner_agent: research.intelligence
+created: 2026-10-03
+hypothesis: >
+  When a NIFTY half-hour close (10:00-13:30) lies outside the time-of-day noise area, defined at minute m as
+  [min(open, prev_close), max(open, prev_close)] widened by k times the 14-session mean absolute move from the open to
+  minute m, an option bought in the breakout direction and held until a half-hour close back inside the band (or 14:45)
+  has positive net expectancy and beats a volatility-matched random entry.
+economic_rationale: >
+  An escape from the normal intraday range for that time of day marks abnormal demand or supply; on SPY the authors
+  report that trend-following such escapes with trailing stops was profitable after costs for 2007-2024, and hedging
+  flows (Baltussen et al., JFE 2021) give a reason for intraday continuation. A bought option turns trend days into a
+  convex payoff while the stop caps the loss on range days.
+required_data:
+  - {dataset: nifty_index_1m, granularity: 1m, fields: [open, high, low, close], availability: AVAILABLE}
+  - {dataset: nifty_opt_1m_atm_band, granularity: 1m, fields: [open, high, low, close, volume], availability: AVAILABLE}
+  - {dataset: nifty_opt_quotes, granularity: 1s, fields: [bid, ask, ltp], availability: UNCERTAIN, substitute: "1-minute option closes with the ASSUMED spread model"}
+signal:
+  formula: >
+    sigma_m = mean over the last L sessions of |close_m / open_day - 1|; upper_m = max(open, prev_close) * (1 + k *
+    sigma_m); lower_m = min(open, prev_close) * (1 - k * sigma_m); at each check minute: close > upper -> BUY CE; close <
+    lower -> BUY PE
+  params:
+    lookback_sessions: {value: 14, min: 10, max: 20, step: 2}
+    band_mult: {value: 1.0, min: 0.8, max: 1.5, step: 0.1}
+    check_minutes: {value: 30, min: 15, max: 60, step: 15}
+legs:
+  - {side: BUY, right: SIGNAL}
+eligible_regimes: [VOLATILITY_COMPRESSION, VOLATILITY_NORMAL, VOLATILITY_EXPANSION, GAP_REGIME]
+prohibited_regimes: [EVENT_REGIME, LOW_LIQUIDITY, ABNORMAL_MARKET, NO_EDGE]
+invalidation_rules:
+  - kind: PRICE_LEVEL
+    description: "a check-minute close back inside the noise area (the band acts as the trailing stop)"
+    action: EXIT_POSITION
+  - kind: REGIME_CHANGE
+    description: "the market turns abnormal"
+    action: EXIT_POSITION
+    regimes: [ABNORMAL_MARKET]
+  - kind: DATA
+    description: "fewer than lookback_sessions clean sessions of history: no band, no entry"
+    action: STAND_DOWN_DAY
+selection:
+  expiry: "nearest weekly with DTE >= 1"
+  strike: "delta 0.45-0.55 by own IV calc; spread <= 2 ticks"
+entry:
+  trigger: "first check-minute close outside the noise area"
+  window_start: "10:00:00"
+  window_end: "13:30:00"
+  order: {type: LIMIT, price_rule: "mid + 1 tick, capped at max_price", ttl_seconds: 10, max_chase_ticks: 2}
+  max_entries_per_day: 1  # new-strategy default (docs/research/strategy-hypotheses.md entry caps); a reversal re-entry would be a new hypothesis
+exit:
+  stop: {method: PREMIUM_PCT, value: 30, order: SL_LIMIT, limit_offset_ticks: 4}
+  profit_taking: "none fixed: exit on the band (trailing) or the time exit"
+  time_exit: "14:45:00"
+  max_holding_minutes: 285
+sizing:
+  method: "fixed 1 lot if risk_at_stop <= risk_budget else NO TRADE"
+  max_lots: 1
+  risk_at_stop_formula: "(entry - stop_fill_estimate) * lot + round_trip_costs + slippage_allowance"
+expected_frequency: "2-4 signals/week (prior)"
+expected_slippage: {entry_ticks: 1, exit_ticks: 1, stop_ticks: 2, source: assumed}
+cost_assumptions: {cost_model_version: CM-2026-04-01, brokerage_plan: upstox-options}
+capacity: "high relative to one lot (NIFTY ATM liquidity)"
+failure_modes:
+  - "range days with repeated band touches (whipsaw)"
+  - "the SPY result does not transfer to NIFTY, or is a period effect"
+  - "theta over multi-hour holds eats the move on slow trend days"
+falsification_criteria:
+  - "OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0"
+  - "the index move from entry to exit is not larger than for a volatility-matched random entry at the same check minutes (p >= 0.10)"
+  - "results are positive only in one calendar year of 2022-2026 (docs/research/validation.md V7 era concentration)"
+cost_sensitivity: >
+  Holds of one to four hours give targets of tens of premium points against a round trip of about INR 50-70 (3-5% of a
+  ~INR 1,950 risk at stop); whipsaw is the cost risk, which is why checks are every 30 minutes and entries are capped
+  at 1 a day. The edge must survive 2x slippage (docs/research/validation.md V10).
+dependencies: {weekly_expiry: true}
+retirement_criteria:
+  - "OOS expectancy CI upper bound < 0"
+  - "live slippage > 2x assumed over 20 trades"
+event_certified: false

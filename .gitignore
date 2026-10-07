@@ -1,0 +1,32 @@
+# secrets — never commit
+.env
+*.env
+secrets/
+*.key
+*.pem
+*token*
+!docs/**
+# the dashboard's design tokens are CSS, not credentials (v3 shipped without them because of the pattern above)
+!dashboard/src/design/tokens.css
+# data
+lake/
+*.parquet
+*.sqlite
+*.db
+# python
+__pycache__/
+*.pyc
+.venv/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
+.ruff_cache/
+dist/
+build/
+.coverage
+configs/local/
+# run logs (backfill etc.)
+logs/
+
+# the private alpha library (live candidates, exact parameters): never committed, loaded if present
+private_alpha/

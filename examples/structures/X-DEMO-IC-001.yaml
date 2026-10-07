@@ -1,0 +1,25 @@
+# SYNTHETIC EXAMPLE, not a research candidate: arbitrary parameters that exercise the schema and the PAPER book.
+id: X-DEMO-IC-001
+version: 0.1.0
+hypothesis_code: H91
+status: RESEARCH
+scope: RESEARCH_PAPER_OD019
+hypothesis: >
+  DEMO ONLY. A weekly iron condor sold five strikes out with two-strike wings, with an intraday variant and an
+  overnight variant (the overnight one is refused by the PAPER book unless an explicit exception is configured).
+leg_sets:
+  ALWAYS:
+    - {side: SELL, right: CE, offset: 5}
+    - {side: SELL, right: PE, offset: -5}
+    - {side: BUY, right: CE, offset: 7}
+    - {side: BUY, right: PE, offset: -7}
+variants:
+  - {code: I, entry: "10:30:00", exit: "14:30:00"}
+  - {code: O, entry: "13:30:00", exit: "14:30:00", holds_overnight: true, sessions_before_expiry: 3}
+gate: NONE
+target_frac_of_credit: "0.6"
+stop_loss_multiple_of_credit: "1.5"
+risk_frac: "0.01"
+max_lots: 1
+falsification:
+  - "DEMO: out-of-sample per-lot mean net R 90% day-block bootstrap CI upper bound < 0"

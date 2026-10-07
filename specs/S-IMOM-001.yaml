@@ -1,0 +1,87 @@
+# H21 (docs/research/institutional-intelligence-layer.md §4). RESEARCH: no evidence, no confidence. Param
+# values are pre-registered priors, not fitted numbers. Sources: Gao, Han, Li & Zhou, "Market intraday momentum" (JFE
+# 2018); Baltussen, Da, Lammers & Martens, "Hedging demand and market intraday momentum" (JFE 2021). The classic window
+# (the exchange's last half-hour) is outside OD-002; this is the in-window variant. Sibling of H12 (S-TOD-001): both
+# count in the trial total.
+# Approximate minimum NAV: one afternoon ATM leg ~INR 50-110 x 65 x 25% stop + costs -> ~INR 45k-95k.
+# Promoted from specs/drafts/ on 3-Oct-2026 once its library plug-in (strategies/library/signals_intel.py) and its
+# entry-cap row (docs/research/strategy-hypotheses.md) existed. Still RESEARCH: no evidence, no confidence.
+id: S-IMOM-001
+version: 0.1.0
+status: RESEARCH
+owner_agent: research.intelligence
+created: 2026-10-03
+hypothesis: >
+  When the NIFTY return from the previous close to 13:30 is at least 0.4% in absolute value and the 09:15-13:30 realised
+  volatility is at or above the median of its last 20 sessions, an option bought in the direction of that return
+  between 13:30 and 13:50 and closed by 14:45 has positive net expectancy, and the 13:30-14:45 index return has the same
+  sign as the previous-close-to-13:30 return more often than on days below either threshold.
+economic_rationale: >
+  Hedgers who are short gamma (option market makers, leveraged products) must trade with the day's move, and much of
+  that rebalancing happens late in the session; Baltussen et al. find the rest-of-day return predicts the last 30
+  minutes in 60+ futures markets, most strongly on negative-gamma days, and Gao et al. find intraday momentum stronger
+  on volatile days. Part of the late flow may already run before our 14:50 flatten.
+required_data:
+  - {dataset: nifty_index_1m, granularity: 1m, fields: [open, high, low, close], availability: AVAILABLE}
+  - {dataset: nifty_index_1d_prev_close, granularity: 1d, fields: [close], availability: AVAILABLE}
+  - {dataset: nifty_opt_1m_atm_band, granularity: 1m, fields: [open, high, low, close, volume], availability: AVAILABLE}
+signal:
+  formula: >
+    r_rod = close_13:30 / prev_close - 1; rv_pct = percentile of RV(09:15-13:30, 5-min returns) in the last 20 sessions;
+    if |r_rod| >= rod_min_pct and rv_pct >= rv_pct_min: r_rod > 0 -> BUY CE; r_rod < 0 -> BUY PE
+  params:
+    rod_min_pct: {value: 0.4, min: 0.2, max: 0.8, step: 0.1}
+    rv_pct_min: {value: 50, min: 30, max: 80, step: 10}
+legs:
+  - {side: BUY, right: SIGNAL}
+eligible_regimes: [TRENDING_UP, TRENDING_DOWN, VOLATILITY_NORMAL, VOLATILITY_EXPANSION]
+prohibited_regimes: [EVENT_REGIME, EXPIRY_REGIME, LOW_LIQUIDITY, ABNORMAL_MARKET, NO_EDGE]
+invalidation_rules:
+  - kind: PRICE_LEVEL
+    description: "the index gives back half of the 13:30 move measured from the previous close"
+    action: EXIT_POSITION
+  - kind: REGIME_CHANGE
+    description: "the trend flips to range-bound or the market turns abnormal"
+    action: EXIT_POSITION
+    regimes: [MEAN_REVERTING, ABNORMAL_MARKET]
+  - kind: TIME
+    description: "no further move in the signal direction by 14:15"
+    action: EXIT_POSITION
+selection:
+  expiry: "nearest weekly with DTE >= 1"
+  strike: "delta 0.45-0.55 by own IV calc; spread <= 2 ticks"
+entry:
+  trigger: "the 13:30 bar close, re-quoted up to 13:50"
+  window_start: "13:30:00"
+  window_end: "13:50:00"
+  order: {type: LIMIT, price_rule: "mid + 1 tick, capped at max_price", ttl_seconds: 10, max_chase_ticks: 2}
+  max_entries_per_day: 1  # the setup exists once a day
+exit:
+  stop: {method: PREMIUM_PCT, value: 25, order: SL_LIMIT, limit_offset_ticks: 4}
+  profit_taking: "1.5 R, else the time exit"
+  time_exit: "14:45:00"
+  max_holding_minutes: 75
+sizing:
+  method: "fixed 1 lot if risk_at_stop <= risk_budget else NO TRADE"
+  max_lots: 1
+  risk_at_stop_formula: "(entry - stop_fill_estimate) * lot + round_trip_costs + slippage_allowance"
+expected_frequency: "1-2 signals/week (prior)"
+expected_slippage: {entry_ticks: 1, exit_ticks: 1, stop_ticks: 2, source: assumed}
+cost_assumptions: {cost_model_version: CM-2026-04-01, brokerage_plan: upstox-options}
+capacity: "high relative to one lot (NIFTY ATM liquidity)"
+failure_modes:
+  - "the hedging flow arrives after 14:50 (in the exchange's last half-hour), outside our window"
+  - "theta on a 75-minute afternoon hold exceeds the remaining move"
+  - "in NIFTY the dominant hedgers are long gamma, which gives reversal, not momentum"
+falsification_criteria:
+  - "OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0"
+  - "on the lake the sign agreement of r_rod and the 13:30-14:45 return on qualifying days is not above that of non-qualifying days (p >= 0.10)"
+cost_sensitivity: >
+  Afternoon ATM premiums are about INR 50-110; a 25% stop risks about INR 800-1,800 a lot, so a round trip of about INR
+  50-70 is 3-9% of the risk, and a 1.5 R target needs a 37.5% premium gain within 75 minutes against fast theta near
+  expiry. The edge must survive 2x slippage (docs/research/validation.md V10).
+dependencies: {weekly_expiry: true}
+retirement_criteria:
+  - "OOS expectancy CI upper bound < 0"
+  - "live slippage > 2x assumed over 20 trades"
+event_certified: false

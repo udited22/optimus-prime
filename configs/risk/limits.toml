@@ -1,0 +1,496 @@
+# Risk Governor limits (K-02). Versioned; any change = git commit + owner approval; load only outside market hours.
+# Sources: the constitution owner decisions, docs/risk/risk-engine.md §9.2 (limits) and §9.4 (kill thresholds).
+# Items listed in `pending_signoff` are DESIGN DEFAULTS awaiting owner sign-off; they are deliberately on the safe side.
+# Old versions are kept unchanged; the loader picks the latest adopted_on unless a version is requested.
+
+[[limits]]
+version = "RL-2026-09-30.1"             # SUPERSEDED by RL-2026-10-01.1 (OD-010)
+adopted_on = 2026-09-30
+owner_decisions = ["OD-002", "OD-005", "OD-006", "OD-007", "OD-008"]
+pending_signoff = [
+  "dd_suspend_frac",            # 12.5% suspension (directive only says 'suspend if approaching 15%')
+  "abnormal_index_move_frac",   # X in docs/risk/risk-engine.md §9.4 not yet chosen
+  "abnormal_index_move_window_min",
+  "abnormal_vix_jump_frac",
+  "abnormal_cooloff_min",
+  "broker_error_threshold",
+  "strategy_slippage_multiple",
+]
+
+# --- loss limits (fractions of NAV) ---
+per_trade_max_loss_frac = "0.02"   # OD-005: 2% of NAV at decision time
+daily_stop_frac = "0.04"           # 4% of start-of-day NAV, realised + unrealised (mark-to-bid)
+weekly_freeze_frac = "0.08"        # 8% of start-of-week NAV -> frozen until owner review
+dd_warning_frac = "0.10"
+dd_suspend_frac = "0.125"          # pending at the time; confirmed by OD-010 in RL-2026-10-01.1
+dd_hard_ceiling_frac = "0.15"      # directive ceiling; the validator refuses anything above 15%
+
+# --- position / behaviour ---
+max_lots = 1
+max_open_entry_orders = 1
+max_trades_per_day = 3
+cooldown_after_stop_min = 15
+martingale_lookback_trades = 3
+min_slippage_ticks_per_side = 2
+buying_power_buffer = "500"
+
+# --- liquidity / price sanity ---
+spread_max_ticks = 2
+spread_max_frac_of_mid = "0.03"
+min_top_of_book_lots = 2
+min_oi = 0
+limit_below_bid_ticks = 5
+limit_above_ask_ticks = 2
+quote_max_age_s = "3"
+
+# --- protective exit / tickets ---
+protective_stop_confirm_s = "3"
+ticket_ttl_s = "2"
+
+# --- kill thresholds (docs/risk/risk-engine.md §9.4; initial, tuned in Phase 1/3) ---
+strategy_consecutive_stops = 3
+strategy_slippage_multiple = "2"
+strategy_slippage_breach_trades = 3
+strategy_invalid_intents = 3
+portfolio_unexplained_pnl_frac = "0.01"
+dq_stale_s = "3"
+dq_healthy_reset_s = "60"
+broker_ws_down_s = "10"
+broker_unknown_order_s = "10"
+broker_error_threshold = 3          # order-API errors/timeouts within broker_error_window_s
+broker_error_window_s = "60"
+abnormal_index_move_frac = "0.015"  # PENDING: X
+abnormal_index_move_window_min = 5  # PENDING: Y
+abnormal_vix_jump_frac = "0.15"     # PENDING: Z
+abnormal_cooloff_min = 30           # PENDING
+clock_drift_ms = 250
+disk_free_min_frac = "0.10"
+
+[[limits]]
+version = "RL-2026-10-01.1"             # SUPERSEDED by RL-2026-10-02.1 (OD-013)
+adopted_on = 2026-10-01
+owner_decisions = ["OD-002", "OD-005", "OD-006", "OD-007", "OD-008", "OD-009", "OD-010"]
+pending_signoff = [
+  "abnormal_index_move_frac",   # X in docs/risk/risk-engine.md §9.4 not yet chosen
+  "abnormal_index_move_window_min",
+  "abnormal_vix_jump_frac",
+  "abnormal_cooloff_min",
+  "broker_error_threshold",
+  "strategy_slippage_multiple",
+]
+
+# --- loss limits (fractions of NAV) ---
+per_trade_max_loss_frac = "0.02"   # OD-005: 2% of NAV at decision time
+daily_stop_frac = "0.04"           # 4% of start-of-day NAV, realised + unrealised (mark-to-bid)
+weekly_freeze_frac = "0.08"        # 8% of start-of-week NAV -> frozen until owner review
+dd_warning_frac = "0.10"
+dd_suspend_frac = "0.125"          # OD-010: owner-confirmed; must stay < dd_hard_ceiling_frac
+dd_hard_ceiling_frac = "0.15"      # directive ceiling; the validator refuses anything above 15%
+
+# --- position / behaviour ---
+max_lots = 1
+max_open_entry_orders = 1
+# Per-strategy lot cap; a strategy not listed uses max_lots. Only a multi-leg spec (two BUY legs, e.g. a long
+# straddle) can use more than one lot, one per leg, and the summed risk of all its legs must fit the 2% budget.
+# PENDING owner decision (S-VIXSTR-001 two-leg straddle): approving it is the one-line edit
+#   strategy_max_lots = { "S-VIXSTR-001" = 2 }
+strategy_max_lots = {}
+max_trades_per_day = 3
+cooldown_after_stop_min = 15
+martingale_lookback_trades = 3
+min_slippage_ticks_per_side = 2
+buying_power_buffer = "500"
+
+# --- liquidity / price sanity ---
+spread_max_ticks = 2
+spread_max_frac_of_mid = "0.03"
+min_top_of_book_lots = 2
+min_oi = 0
+limit_below_bid_ticks = 5
+limit_above_ask_ticks = 2
+quote_max_age_s = "3"
+
+# --- protective exit / tickets ---
+protective_stop_confirm_s = "3"
+ticket_ttl_s = "2"
+
+# --- kill thresholds (docs/risk/risk-engine.md §9.4; initial, tuned in Phase 1/3) ---
+strategy_consecutive_stops = 3
+strategy_slippage_multiple = "2"
+strategy_slippage_breach_trades = 3
+strategy_invalid_intents = 3
+portfolio_unexplained_pnl_frac = "0.01"
+dq_stale_s = "3"
+dq_healthy_reset_s = "60"
+broker_ws_down_s = "10"
+broker_unknown_order_s = "10"
+broker_error_threshold = 3          # order-API errors/timeouts within broker_error_window_s
+broker_error_window_s = "60"
+abnormal_index_move_frac = "0.015"  # PENDING: X
+abnormal_index_move_window_min = 5  # PENDING: Y
+abnormal_vix_jump_frac = "0.15"     # PENDING: Z
+abnormal_cooloff_min = 30           # PENDING
+clock_drift_ms = 250
+disk_free_min_frac = "0.10"
+
+[[limits]]
+version = "RL-2026-10-02.1"             # SUPERSEDED by RL-2026-10-02.2 (OD-014)
+adopted_on = 2026-10-02
+owner_decisions = ["OD-002", "OD-005", "OD-006", "OD-007", "OD-008", "OD-009", "OD-010", "OD-013"]
+pending_signoff = [
+  "abnormal_index_move_frac",   # X in docs/risk/risk-engine.md §9.4 not yet chosen
+  "abnormal_index_move_window_min",
+  "abnormal_vix_jump_frac",
+  "abnormal_cooloff_min",
+  "broker_error_threshold",
+  "strategy_slippage_multiple",
+]
+
+# --- loss limits (fractions of NAV) ---
+per_trade_max_loss_frac = "0.02"   # OD-005: 2% of NAV at decision time
+daily_stop_frac = "0.04"           # 4% of start-of-day NAV, realised + unrealised (mark-to-bid)
+weekly_freeze_frac = "0.08"        # 8% of start-of-week NAV -> frozen until owner review
+dd_warning_frac = "0.10"
+dd_suspend_frac = "0.125"          # OD-010: owner-confirmed; must stay < dd_hard_ceiling_frac
+dd_hard_ceiling_frac = "0.15"      # directive ceiling; the validator refuses anything above 15%
+
+# --- position / behaviour ---
+max_lots = 1
+max_open_entry_orders = 1
+# Per-strategy lot cap (OD-013, owner decision 2-Oct-2026): a two-leg LONG straddle may hold 2 lots, one BUY CE
+# plus one BUY PE, same underlying, expiry and strike, provided the COMBINED risk at the stops of both legs stays
+# at or under per_trade_max_loss_frac (2%) of NAV. This is the only exception to max_lots; the Governor enforces
+# the straddle shape and the combined risk. A strategy not listed uses max_lots. S-IVRV-001 is listed for the H06
+# straddle variant (not built yet); its single-leg trades keep 1 lot because the exception needs a CE+PE pair.
+strategy_max_lots = { "S-VIXSTR-001" = 2, "S-IVRV-001" = 2 }
+max_trades_per_day = 3
+cooldown_after_stop_min = 15
+martingale_lookback_trades = 3
+min_slippage_ticks_per_side = 2
+buying_power_buffer = "500"
+
+# --- liquidity / price sanity ---
+spread_max_ticks = 2
+spread_max_frac_of_mid = "0.03"
+min_top_of_book_lots = 2
+min_oi = 0
+limit_below_bid_ticks = 5
+limit_above_ask_ticks = 2
+quote_max_age_s = "3"
+
+# --- protective exit / tickets ---
+protective_stop_confirm_s = "3"
+ticket_ttl_s = "2"
+
+# --- kill thresholds (docs/risk/risk-engine.md §9.4; initial, tuned in Phase 1/3) ---
+strategy_consecutive_stops = 3
+strategy_slippage_multiple = "2"
+strategy_slippage_breach_trades = 3
+strategy_invalid_intents = 3
+portfolio_unexplained_pnl_frac = "0.01"
+dq_stale_s = "3"
+dq_healthy_reset_s = "60"
+broker_ws_down_s = "10"
+broker_unknown_order_s = "10"
+broker_error_threshold = 3          # order-API errors/timeouts within broker_error_window_s
+broker_error_window_s = "60"
+abnormal_index_move_frac = "0.015"  # PENDING: X
+abnormal_index_move_window_min = 5  # PENDING: Y
+abnormal_vix_jump_frac = "0.15"     # PENDING: Z
+abnormal_cooloff_min = 30           # PENDING
+clock_drift_ms = 250
+disk_free_min_frac = "0.10"
+
+[[limits]]
+version = "RL-2026-10-02.2"             # SUPERSEDED by RL-2026-10-02.3 (OD-017)
+adopted_on = 2026-10-02
+owner_decisions = ["OD-002", "OD-005", "OD-006", "OD-007", "OD-008", "OD-009", "OD-010", "OD-013", "OD-014"]
+pending_signoff = [
+  "abnormal_index_move_frac",   # X in docs/risk/risk-engine.md §9.4 not yet chosen
+  "abnormal_index_move_window_min",
+  "abnormal_vix_jump_frac",
+  "abnormal_cooloff_min",
+  "broker_error_threshold",
+  "strategy_slippage_multiple",
+]
+
+# --- loss limits (fractions of NAV) ---
+per_trade_max_loss_frac = "0.02"   # OD-005: 2% of NAV at decision time
+daily_stop_frac = "0.04"           # 4% of start-of-day NAV, realised + unrealised (mark-to-bid)
+weekly_freeze_frac = "0.08"        # 8% of start-of-week NAV -> frozen until owner review
+dd_warning_frac = "0.10"
+dd_suspend_frac = "0.125"          # OD-010: owner-confirmed; must stay < dd_hard_ceiling_frac
+dd_hard_ceiling_frac = "0.15"      # directive ceiling; the validator refuses anything above 15%
+
+# --- position / behaviour ---
+max_lots = 1
+max_open_entry_orders = 1
+# Per-strategy lot cap (OD-013, owner decision 2-Oct-2026): a two-leg LONG straddle may hold 2 lots, one BUY CE
+# plus one BUY PE, same underlying, expiry and strike, provided the COMBINED risk at the stops of both legs stays
+# at or under per_trade_max_loss_frac (2%) of NAV. This is the only exception to max_lots; the Governor enforces
+# the straddle shape and the combined risk. A strategy not listed uses max_lots. S-IVRV-001 is listed for the H06
+# straddle variant (not built yet); its single-leg trades keep 1 lot because the exception needs a CE+PE pair.
+strategy_max_lots = { "S-VIXSTR-001" = 2, "S-IVRV-001" = 2 }
+# OD-014: the system-wide cap on new entries per day is 10 (was 3). Each spec also has its
+# own entry.max_entries_per_day (StrategySpec); the Governor and the allocator enforce both. Entries are ENTRY orders
+# submitted, so a two-leg straddle counts 2. Every other limit is unchanged.
+max_trades_per_day = 10
+cooldown_after_stop_min = 15
+martingale_lookback_trades = 3
+min_slippage_ticks_per_side = 2
+buying_power_buffer = "500"
+
+# --- liquidity / price sanity ---
+spread_max_ticks = 2
+spread_max_frac_of_mid = "0.03"
+min_top_of_book_lots = 2
+min_oi = 0
+limit_below_bid_ticks = 5
+limit_above_ask_ticks = 2
+quote_max_age_s = "3"
+
+# --- protective exit / tickets ---
+protective_stop_confirm_s = "3"
+ticket_ttl_s = "2"
+
+# --- kill thresholds (docs/risk/risk-engine.md §9.4; initial, tuned in Phase 1/3) ---
+strategy_consecutive_stops = 3
+strategy_slippage_multiple = "2"
+strategy_slippage_breach_trades = 3
+strategy_invalid_intents = 3
+portfolio_unexplained_pnl_frac = "0.01"
+dq_stale_s = "3"
+dq_healthy_reset_s = "60"
+broker_ws_down_s = "10"
+broker_unknown_order_s = "10"
+broker_error_threshold = 3          # order-API errors/timeouts within broker_error_window_s
+broker_error_window_s = "60"
+abnormal_index_move_frac = "0.015"  # PENDING: X
+abnormal_index_move_window_min = 5  # PENDING: Y
+abnormal_vix_jump_frac = "0.15"     # PENDING: Z
+abnormal_cooloff_min = 30           # PENDING
+clock_drift_ms = 250
+disk_free_min_frac = "0.10"
+
+[[limits]]
+version = "RL-2026-10-02.3"             # SUPERSEDED by RL-2026-10-03.1 (OD-013 applied to S-DAYVOL-001)
+adopted_on = 2026-10-02
+owner_decisions = ["OD-002", "OD-005", "OD-006", "OD-007", "OD-008", "OD-009", "OD-010", "OD-013", "OD-014", "OD-017"]
+# OD-017: The owner delegated the remaining risk limits to the build, to be set by
+# standard capital-preservation practice. Every value below is now chosen; reasoning in OD-017 and
+# docs/risk/risk-engine.md §9.4a. Nothing awaits sign-off.
+pending_signoff = []
+
+# --- loss limits (fractions of NAV) ---
+per_trade_max_loss_frac = "0.02"   # OD-005: 2% of NAV at decision time
+daily_stop_frac = "0.04"           # 4% of start-of-day NAV, realised + unrealised (mark-to-bid)
+weekly_freeze_frac = "0.08"        # 8% of start-of-week NAV -> frozen until owner review
+dd_warning_frac = "0.10"
+dd_suspend_frac = "0.125"          # OD-010: owner-confirmed; must stay < dd_hard_ceiling_frac
+dd_hard_ceiling_frac = "0.15"      # directive ceiling; the validator refuses anything above 15%
+
+# --- position / behaviour ---
+max_lots = 1
+max_open_entry_orders = 1
+# Per-strategy lot cap (OD-013, owner decision 2-Oct-2026): a two-leg LONG straddle may hold 2 lots, one BUY CE
+# plus one BUY PE, same underlying, expiry and strike, provided the COMBINED risk at the stops of both legs stays
+# at or under per_trade_max_loss_frac (2%) of NAV. This is the only exception to max_lots; the Governor enforces
+# the straddle shape and the combined risk. A strategy not listed uses max_lots. S-IVRV-001 is listed for the H06
+# straddle variant (not built yet); its single-leg trades keep 1 lot because the exception needs a CE+PE pair.
+strategy_max_lots = { "S-VIXSTR-001" = 2, "S-IVRV-001" = 2 }
+# OD-014: the system-wide cap on new entries per day is 10 (was 3). Each spec also has its
+# own entry.max_entries_per_day (StrategySpec); the Governor and the allocator enforce both. Entries are ENTRY orders
+# submitted; a two-leg straddle is ONE entry (its completing leg is journalled counts_as_entry = false).
+max_trades_per_day = 10
+cooldown_after_stop_min = 15
+martingale_lookback_trades = 3
+min_slippage_ticks_per_side = 2
+buying_power_buffer = "500"
+
+# --- liquidity / price sanity ---
+spread_max_ticks = 2
+spread_max_frac_of_mid = "0.03"
+min_top_of_book_lots = 2
+min_oi = 0
+limit_below_bid_ticks = 5
+limit_above_ask_ticks = 2
+quote_max_age_s = "3"
+
+# --- protective exit / tickets ---
+protective_stop_confirm_s = "3"
+ticket_ttl_s = "2"
+
+# --- kill thresholds (docs/risk/risk-engine.md §9.4; initial, tuned in Phase 1/3) ---
+strategy_consecutive_stops = 3
+strategy_slippage_multiple = "2"     # OD-017: sum(realised) > 2x sum(modelled) over the last 5 fills -> STRATEGY kill
+strategy_slippage_breach_trades = 3  # legacy SLIPPAGE_BREACH events (none are emitted by the runtime any more)
+strategy_invalid_intents = 3
+portfolio_unexplained_pnl_frac = "0.01"
+dq_stale_s = "3"
+dq_healthy_reset_s = "60"
+broker_ws_down_s = "10"
+broker_unknown_order_s = "10"
+broker_error_threshold = 5          # OD-017: 5 order/API errors or timeouts within broker_error_window_s ...
+broker_error_window_s = "900"       # ... = 15 minutes
+abnormal_index_move_frac = "0.01"   # OD-017: a 1% NIFTY move inside 5 minutes (the fast-move rule) ...
+abnormal_index_move_window_min = 5
+abnormal_vix_jump_frac = "0.20"     # OD-017: India VIX up more than 20% since the session open
+abnormal_cooloff_min = 30           # OD-017: owner reset or 30-minute cool-off; re-latches while the condition holds
+clock_drift_ms = 250
+disk_free_min_frac = "0.10"
+# --- OD-017 additions ---
+abnormal_index_from_open_frac = "0.02"   # NIFTY more than 2% from the session open (either way) -> ABNORMAL_MARKET
+broker_consecutive_error_threshold = 3   # 3 order/API errors in a row -> BROKER_CONNECTIVITY
+slippage_window_fills = 5                # the window for strategy_slippage_multiple
+slippage_single_fill_multiple = "3"      # any single fill above 3x its modelled slippage -> STRATEGY kill
+
+[[limits]]
+version = "RL-2026-10-03.1"             # SUPERSEDED by RL-2026-10-03.2 (OD-013 applied to H32-H34)
+adopted_on = 2026-10-03
+owner_decisions = ["OD-002", "OD-005", "OD-006", "OD-007", "OD-008", "OD-009", "OD-010", "OD-013", "OD-014", "OD-017"]
+# OD-017: The owner delegated the remaining risk limits to the build, to be set by
+# standard capital-preservation practice. Every value below is now chosen; reasoning in OD-017 and
+# docs/risk/risk-engine.md §9.4a. Nothing awaits sign-off.
+pending_signoff = []
+
+# --- loss limits (fractions of NAV) ---
+per_trade_max_loss_frac = "0.02"   # OD-005: 2% of NAV at decision time
+daily_stop_frac = "0.04"           # 4% of start-of-day NAV, realised + unrealised (mark-to-bid)
+weekly_freeze_frac = "0.08"        # 8% of start-of-week NAV -> frozen until owner review
+dd_warning_frac = "0.10"
+dd_suspend_frac = "0.125"          # OD-010: owner-confirmed; must stay < dd_hard_ceiling_frac
+dd_hard_ceiling_frac = "0.15"      # directive ceiling; the validator refuses anything above 15%
+
+# --- position / behaviour ---
+max_lots = 1
+max_open_entry_orders = 1
+# Per-strategy lot cap (OD-013, owner decision 2-Oct-2026): a two-leg LONG straddle may hold 2 lots, one BUY CE
+# plus one BUY PE, same underlying, expiry and strike, provided the COMBINED risk at the stops of both legs stays
+# at or under per_trade_max_loss_frac (2%) of NAV. This is the only exception to max_lots; the Governor enforces
+# the straddle shape and the combined risk. A strategy not listed uses max_lots. S-IVRV-001 is listed for the H06
+# straddle variant (not built yet); its single-leg trades keep 1 lot because the exception needs a CE+PE pair.
+# 3-Oct-2026: S-DAYVOL-001 (H19, a two-leg long ATM straddle) gets the same OD-013 allowance. No new owner decision:
+# OD-013 already covers any long straddle of this shape; the Governor still enforces the shape and the combined risk.
+strategy_max_lots = { "S-VIXSTR-001" = 2, "S-IVRV-001" = 2, "S-DAYVOL-001" = 2 }
+# OD-014: the system-wide cap on new entries per day is 10 (was 3). Each spec also has its
+# own entry.max_entries_per_day (StrategySpec); the Governor and the allocator enforce both. Entries are ENTRY orders
+# submitted; a two-leg straddle is ONE entry (its completing leg is journalled counts_as_entry = false).
+max_trades_per_day = 10
+cooldown_after_stop_min = 15
+martingale_lookback_trades = 3
+min_slippage_ticks_per_side = 2
+buying_power_buffer = "500"
+
+# --- liquidity / price sanity ---
+spread_max_ticks = 2
+spread_max_frac_of_mid = "0.03"
+min_top_of_book_lots = 2
+min_oi = 0
+limit_below_bid_ticks = 5
+limit_above_ask_ticks = 2
+quote_max_age_s = "3"
+
+# --- protective exit / tickets ---
+protective_stop_confirm_s = "3"
+ticket_ttl_s = "2"
+
+# --- kill thresholds (docs/risk/risk-engine.md §9.4; initial, tuned in Phase 1/3) ---
+strategy_consecutive_stops = 3
+strategy_slippage_multiple = "2"     # OD-017: sum(realised) > 2x sum(modelled) over the last 5 fills -> STRATEGY kill
+strategy_slippage_breach_trades = 3  # legacy SLIPPAGE_BREACH events (none are emitted by the runtime any more)
+strategy_invalid_intents = 3
+portfolio_unexplained_pnl_frac = "0.01"
+dq_stale_s = "3"
+dq_healthy_reset_s = "60"
+broker_ws_down_s = "10"
+broker_unknown_order_s = "10"
+broker_error_threshold = 5          # OD-017: 5 order/API errors or timeouts within broker_error_window_s ...
+broker_error_window_s = "900"       # ... = 15 minutes
+abnormal_index_move_frac = "0.01"   # OD-017: a 1% NIFTY move inside 5 minutes (the fast-move rule) ...
+abnormal_index_move_window_min = 5
+abnormal_vix_jump_frac = "0.20"     # OD-017: India VIX up more than 20% since the session open
+abnormal_cooloff_min = 30           # OD-017: owner reset or 30-minute cool-off; re-latches while the condition holds
+clock_drift_ms = 250
+disk_free_min_frac = "0.10"
+# --- OD-017 additions ---
+abnormal_index_from_open_frac = "0.02"   # NIFTY more than 2% from the session open (either way) -> ABNORMAL_MARKET
+broker_consecutive_error_threshold = 3   # 3 order/API errors in a row -> BROKER_CONNECTIVITY
+slippage_window_fills = 5                # the window for strategy_slippage_multiple
+slippage_single_fill_multiple = "3"      # any single fill above 3x its modelled slippage -> STRATEGY kill
+
+[[limits]]
+version = "RL-2026-10-03.2"
+adopted_on = 2026-10-03
+owner_decisions = ["OD-002", "OD-005", "OD-006", "OD-007", "OD-008", "OD-009", "OD-010", "OD-013", "OD-014", "OD-017"]
+# OD-017: The owner delegated the remaining risk limits to the build, to be set by
+# standard capital-preservation practice. Every value below is now chosen; reasoning in OD-017 and
+# docs/risk/risk-engine.md §9.4a. Nothing awaits sign-off.
+pending_signoff = []
+
+# --- loss limits (fractions of NAV) ---
+per_trade_max_loss_frac = "0.02"   # OD-005: 2% of NAV at decision time
+daily_stop_frac = "0.04"           # 4% of start-of-day NAV, realised + unrealised (mark-to-bid)
+weekly_freeze_frac = "0.08"        # 8% of start-of-week NAV -> frozen until owner review
+dd_warning_frac = "0.10"
+dd_suspend_frac = "0.125"          # OD-010: owner-confirmed; must stay < dd_hard_ceiling_frac
+dd_hard_ceiling_frac = "0.15"      # directive ceiling; the validator refuses anything above 15%
+
+# --- position / behaviour ---
+max_lots = 1
+max_open_entry_orders = 1
+# Per-strategy lot cap (OD-013, owner decision 2-Oct-2026): a two-leg LONG straddle may hold 2 lots, one BUY CE
+# plus one BUY PE, same underlying, expiry and strike, provided the COMBINED risk at the stops of both legs stays
+# at or under per_trade_max_loss_frac (2%) of NAV. This is the only exception to max_lots; the Governor enforces
+# the straddle shape and the combined risk. A strategy not listed uses max_lots. S-IVRV-001 is listed for the H06
+# straddle variant (not built yet); its single-leg trades keep 1 lot because the exception needs a CE+PE pair.
+# 3-Oct-2026: S-DAYVOL-001 (H19, a two-leg long ATM straddle) gets the same OD-013 allowance. No new owner decision:
+# OD-013 already covers any long straddle of this shape; the Governor still enforces the shape and the combined risk.
+# 3-Oct-2026 (20:40 IST): the three straddles of the volatility round (H32 S-VOLCHEAP-001, H33 S-VOLHOLD-001, H34
+# S-EXPVOL-001: BUY ATM CE + BUY ATM PE, same strike and expiry) get the same OD-013 allowance; no new owner decision.
+# Strangles (different strikes) are NOT covered by OD-013 and stay blocked.
+strategy_max_lots = { "S-VIXSTR-001" = 2, "S-IVRV-001" = 2, "S-DAYVOL-001" = 2, "S-VOLCHEAP-001" = 2, "S-VOLHOLD-001" = 2, "S-EXPVOL-001" = 2 }
+# OD-014: the system-wide cap on new entries per day is 10 (was 3). Each spec also has its
+# own entry.max_entries_per_day (StrategySpec); the Governor and the allocator enforce both. Entries are ENTRY orders
+# submitted; a two-leg straddle is ONE entry (its completing leg is journalled counts_as_entry = false).
+max_trades_per_day = 10
+cooldown_after_stop_min = 15
+martingale_lookback_trades = 3
+min_slippage_ticks_per_side = 2
+buying_power_buffer = "500"
+
+# --- liquidity / price sanity ---
+spread_max_ticks = 2
+spread_max_frac_of_mid = "0.03"
+min_top_of_book_lots = 2
+min_oi = 0
+limit_below_bid_ticks = 5
+limit_above_ask_ticks = 2
+quote_max_age_s = "3"
+
+# --- protective exit / tickets ---
+protective_stop_confirm_s = "3"
+ticket_ttl_s = "2"
+
+# --- kill thresholds (docs/risk/risk-engine.md §9.4; initial, tuned in Phase 1/3) ---
+strategy_consecutive_stops = 3
+strategy_slippage_multiple = "2"     # OD-017: sum(realised) > 2x sum(modelled) over the last 5 fills -> STRATEGY kill
+strategy_slippage_breach_trades = 3  # legacy SLIPPAGE_BREACH events (none are emitted by the runtime any more)
+strategy_invalid_intents = 3
+portfolio_unexplained_pnl_frac = "0.01"
+dq_stale_s = "3"
+dq_healthy_reset_s = "60"
+broker_ws_down_s = "10"
+broker_unknown_order_s = "10"
+broker_error_threshold = 5          # OD-017: 5 order/API errors or timeouts within broker_error_window_s ...
+broker_error_window_s = "900"       # ... = 15 minutes
+abnormal_index_move_frac = "0.01"   # OD-017: a 1% NIFTY move inside 5 minutes (the fast-move rule) ...
+abnormal_index_move_window_min = 5
+abnormal_vix_jump_frac = "0.20"     # OD-017: India VIX up more than 20% since the session open
+abnormal_cooloff_min = 30           # OD-017: owner reset or 30-minute cool-off; re-latches while the condition holds
+clock_drift_ms = 250
+disk_free_min_frac = "0.10"
+# --- OD-017 additions ---
+abnormal_index_from_open_frac = "0.02"   # NIFTY more than 2% from the session open (either way) -> ABNORMAL_MARKET
+broker_consecutive_error_threshold = 3   # 3 order/API errors in a row -> BROKER_CONNECTIVITY
+slippage_window_fills = 5                # the window for strategy_slippage_multiple
+slippage_single_fill_multiple = "3"      # any single fill above 3x its modelled slippage -> STRATEGY kill

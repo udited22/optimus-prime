@@ -1,0 +1,112 @@
+# Whole-system economics: returns net of brokerage, statutory charges, infrastructure and income tax.
+# docs/risk/system-economics.md, owner note OD-012 (1-Oct-2026): The owner wants this measured and optimised over time; it is NOT a blocker.
+# Versioned. Every number that is not verified carries status = "ASSUMED" or "UNVERIFIED" and is shown with that label.
+# Amounts are quoted strings (parsed as Decimal; floats are rejected).
+
+config_version = "ECON-2026-10-02.1"  # OD-017: no CA review; the tax figure stays ASSUMED
+effective_from = 2026-10-02
+currency = "INR"
+# 365.25 / 12: converts "per N days" billing (Dhan bills per 30 days) into a calendar-month equivalent.
+days_per_month = "30.4375"
+
+[fx]
+usd_inr = "96"
+status = "ASSUMED"
+as_of = 2026-09-30
+note = "USD/INR market mid was about 94.4-96.1 in Sep-2026. Card or bank forex markup is not included."
+
+# ---------------------------------------------------------------- fixed monthly running costs
+# billing: "MONTHLY" (per calendar month) or "PER_N_DAYS" (period_days required).
+# gst_rate is applied on top of amount. enabled = false lines are listed in reports but not charged.
+
+[[fixed_cost]]
+line_id = "dhan-data-api"
+label = "Dhan Data API (historical data, OD-011)"
+amount = "499"
+currency = "INR"
+billing = "PER_N_DAYS"
+period_days = 30
+gst_rate = "0.18"
+enabled = true
+status = "VERIFIED"
+sources = ["S30"]
+optimisation = "Pause the Dhan Data API between research download batches; it bills per 30 days and the lake keeps everything already downloaded."
+
+[[fixed_cost]]
+line_id = "cloud-server-mumbai"
+label = "Cloud server, Mumbai region, static IP (planned hosting)"
+amount = "5"
+currency = "USD"
+billing = "MONTHLY"
+gst_rate = "0.18"
+enabled = true
+status = "ASSUMED"
+range_low = "5"
+range_high = "20"
+sources = []
+note = "Planned, not yet bought. Assumed USD 5-20 a month (smallest instance with a static IP) plus 18% GST. The base case uses the low end."
+optimisation = "Use the smallest instance that holds the workload. Run research, shadow and paper locally, and start the Mumbai server only for go-live."
+
+[[fixed_cost]]
+line_id = "llm-api"
+label = "LLM / API spend (research agents)"
+amount = "0"
+currency = "USD"
+billing = "MONTHLY"
+gst_rate = "0.18"
+enabled = true
+status = "ASSUMED"
+sources = []
+note = "Configurable. No paid LLM/API usage today. Set this to the monthly bill once the agents run."
+optimisation = "Cap monthly LLM/API spend, cache research prompts and results, and use the cheapest model that passes the validation tests."
+
+[[fixed_cost]]
+line_id = "upstox-plus"
+label = "Upstox Plus plan (optional)"
+amount = "0"
+currency = "INR"
+billing = "MONTHLY"
+gst_rate = "0.18"
+enabled = false
+status = "VERIFIED"
+sources = ["S73", "S74"]
+brokerage_plan_if_enabled = "upstox-plus-options"
+note = "No subscription fee today (free to activate; Upstox will notify before it becomes chargeable). Its real cost is brokerage of Rs 30 instead of Rs 20 per executed options order."
+optimisation = "Stay on Upstox Basic unless a Plus feature is actually used; Plus costs Rs 10 + GST more per executed order."
+
+# ---------------------------------------------------------------- income tax (ASSUMED; OD-017: no CA review)
+[tax]
+status = "ASSUMED"
+treatment = "NON_SPECULATIVE_BUSINESS_INCOME"
+slab_rate = "0.30"
+cess_rate = "0.04"
+fiscal_year_start_month = 4
+expenses_deductible = true
+note = "F&O gains are taxed as non-speculative business income at the slab rate. Default: the top slab of 30% plus 4% health and education cess (31.2% effective). Surcharge, other income, the basic exemption and the regime choice are ignored. Trading charges (including STT) and infrastructure costs are treated as deductible business expenses."
+basis = "OD-017 (2-Oct-2026): no CA review is required; the owner handles tax at filing. The 31.2% figure is ASSUMED and is used only to report net returns; it is not tax advice and is not a go-live gate."
+
+[tax.loss_carry_forward]
+status = "UNVERIFIED"
+note = "A non-speculative business loss may be carried forward for up to 8 assessment years and set off only against business income, and only if the return is filed by the due date. This is NOT applied automatically; an owner can pass a brought-forward loss explicitly."
+
+[tax.audit]
+status = "UNVERIFIED"
+turnover_method = "SUM_ABS_TRADE_PNL"
+turnover_limit_digital = "100000000"
+turnover_limit_default = "10000000"
+note = "F&O turnover for tax-audit purposes is commonly computed as the sum of absolute profits and losses per trade (ICAI Guidance Note). Audit may be required above Rs 10 crore when at least 95% of transactions are digital (else Rs 1 crore), or in some cases when profit is below 6% of turnover with income above the exemption limit. This is a note for the owner at filing, not a rule."
+
+# ---------------------------------------------------------------- cost-justification check (ADVISORY ONLY)
+[cost_justification]
+# Minimum monthly net return on opening NAV, after ALL costs (trading charges, fixed infrastructure, income tax).
+min_net_return_over_costs = "0.005"
+min_net_return_status = "ASSUMED"
+window_months = 3
+# ALL_MONTHS_BELOW: advise only when every month in the rolling window is below the threshold ("stays below").
+rule = "ALL_MONTHS_BELOW"
+# Structural check: fixed running costs per month as a fraction of NAV.
+fixed_cost_nav_threshold = "0.01"
+# Trading charges above this share of gross P&L trigger a "fewer trades" recommendation.
+trading_charge_drag_threshold = "0.5"
+# Must stay true. The check never stops, blocks or limits trading; the loader rejects false.
+advisory_only = true

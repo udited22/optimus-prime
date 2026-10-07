@@ -1,0 +1,94 @@
+# H37 (TT-1), promoted 3-Oct-2026 from specs/drafts/top-traders/ unchanged except version (0.1.0 -> 0.2.0) and
+# this note; library plug-in in strategies/library/signals_tt.py, deviations listed there and in
+# Pre-registered before any run.
+# TT-1 (top-traders literature review, kept private). Pre-registration DRAFT at
+# RESEARCH: no evidence, no confidence. Parameter values are pre-registered priors, not fitted. Not backtested.
+# Sources: trend followers' "let profits run" (Seykota, Dennis/Turtles; grade D), time-series momentum (Moskowitz, Ooi &
+# Pedersen, JFE 2012; grade A, multi-week), first-half-hour momentum (Gao et al., JFE 2018; Li, Sakkas & Urquhart, JFM
+# 2022, stronger in high volatility; grade B). What is new versus the rejected lake specs: NO fixed profit target (all
+# 17 rejected specs capped at 1.5-2 R) and a multi-day trend-alignment condition. Prior: LOW.
+# Approximate minimum NAV: one ATM leg ~INR 90-160 x 65 x 30% catastrophic stop + costs -> ~INR 90k-160k at 2%.
+id: S-TRDAY-001
+version: 0.2.0
+status: RESEARCH
+owner_agent: research.toptraders
+created: 2026-10-03
+hypothesis: >
+  On days when, at 11:00, NIFTY is at least 0.5% from the day's open, has traded beyond the 09:15-10:15 initial
+  balance in the same direction, is on the same side of session VWAP, and the 20-session return has the same sign, an
+  ATM option bought in that direction between 11:00 and 12:30 and exited only by a trailing index stop or at 14:45 has
+  positive net expectancy; and the 11:00-14:45 index return has the same sign as the open-to-11:00 return more often
+  than on days that fail any condition.
+economic_rationale: >
+  Trend days are where intraday hedging flows and late-informed traders keep pushing in one direction (Gao et al.;
+  Baltussen et al.); time-series momentum says the multi-week trend direction is the more likely one. Trend
+  followers make their money from a few unbounded winners, so a capped target removes the payoff the effect provides.
+required_data:
+  - {dataset: nifty_index_1m, granularity: 1m, fields: [open, high, low, close], availability: AVAILABLE}
+  - {dataset: nifty_index_1d_from_1m, granularity: 1d, fields: [close], availability: AVAILABLE}
+  - {dataset: nifty_fut_1m_volume_for_vwap, granularity: 1m, fields: [close, volume], availability: UNVERIFIED, substitute: "equal-weighted typical-price TWAP of index 1m bars"}
+  - {dataset: nifty_opt_1m_atm_band, granularity: 1m, fields: [open, high, low, close, volume], availability: AVAILABLE}
+signal:
+  formula: >
+    r_open = close_11:00 / open_09:15 - 1; IB = [low, high] of 09:15-10:15; r20 = close_prev / close_prev_20 - 1;
+    up if r_open >= move_min_pct and high(10:15-11:00) > IB.high and close_11:00 > VWAP and r20 > 0;
+    down mirror; up -> BUY CE, down -> BUY PE. Trailing stop on the index: best index price since entry minus
+    trail_k x (high - low of 09:15-11:00) for CE (mirror for PE).
+  params:
+    move_min_pct: {value: 0.5, min: 0.3, max: 0.9, step: 0.1}
+    trail_k: {value: 1.0, min: 0.5, max: 1.5, step: 0.25}
+    trend_lookback_sessions: {value: 20, min: 10, max: 60, step: 10}
+legs:
+  - {side: BUY, right: SIGNAL}
+eligible_regimes: [TRENDING_UP, TRENDING_DOWN, OPENING_DRIVE, VOLATILITY_NORMAL, VOLATILITY_EXPANSION]
+prohibited_regimes: [MEAN_REVERTING, EVENT_REGIME, EXPIRY_REGIME, LOW_LIQUIDITY, ABNORMAL_MARKET, NO_EDGE]
+invalidation_rules:
+  - kind: PRICE_LEVEL
+    description: "the index trailing stop (best price since entry minus trail_k x morning range) is touched"
+    action: EXIT_POSITION
+  - kind: PRICE_LEVEL
+    description: "the index re-enters the 09:15-10:15 initial balance"
+    action: EXIT_POSITION
+  - kind: REGIME_CHANGE
+    description: "the day turns range-bound or abnormal"
+    action: EXIT_POSITION
+    regimes: [MEAN_REVERTING, ABNORMAL_MARKET]
+selection:
+  expiry: "nearest weekly with DTE >= 1"
+  strike: "delta 0.45-0.55 by own IV calc; spread <= 2 ticks"
+entry:
+  trigger: "first 1m close between 11:00 and 12:30 at which all four conditions hold"
+  window_start: "11:00:00"
+  window_end: "12:30:00"
+  order: {type: LIMIT, price_rule: "mid + 1 tick, capped at max_price", ttl_seconds: 10, max_chase_ticks: 2}
+  max_entries_per_day: 1
+exit:
+  stop: {method: PREMIUM_PCT, value: 30, order: SL_LIMIT, limit_offset_ticks: 4}
+  profit_taking: "none: no fixed target; exit only on the index trailing stop, an invalidation rule or the time exit"
+  time_exit: "14:45:00"
+  max_holding_minutes: 225
+sizing:
+  method: "fixed 1 lot if risk_at_stop <= risk_budget else NO TRADE"
+  max_lots: 1
+  risk_at_stop_formula: "(entry - stop_fill_estimate) * lot + round_trip_costs + slippage_allowance"
+expected_frequency: "about 1 signal a week (prior: trend days with multi-week alignment)"
+expected_slippage: {entry_ticks: 1, exit_ticks: 1, stop_ticks: 2, source: assumed}
+cost_assumptions: {cost_model_version: CM-2026-04-01, brokerage_plan: upstox-options}
+capacity: "high relative to one lot (NIFTY ATM liquidity)"
+failure_modes:
+  - "by 11:00 most of the trend day's move is already done; the afternoon continuation is too small to beat theta"
+  - "NIFTY dealers are net long gamma on most days, which produces afternoon reversal, not continuation"
+  - "a trailing stop on 1m index bars is whipsawed by noise; the uncapped winners are too rare in 2.5 years of lake"
+falsification_criteria:
+  - "OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0"
+  - "on the lake the 11:00-14:45 sign agreement on qualifying days is not above that of non-qualifying days (p >= 0.10)"
+  - "the trade-return distribution is not positively skewed (sample skewness <= 0): the uncapped-exit premise fails"
+cost_sensitivity: >
+  Late-morning ATM premiums are about INR 90-160; the 30% catastrophic stop risks about INR 1,750-3,100 a lot, so a
+  round trip of about INR 50-70 is 2-4% of the risk. The edge must come from a few large winners, so the result must
+  survive 2x slippage and removal of the single best trade (docs/research/validation.md V10).
+dependencies: {weekly_expiry: true}
+retirement_criteria:
+  - "OOS expectancy CI upper bound < 0"
+  - "live slippage > 2x assumed over 20 trades"
+event_certified: false

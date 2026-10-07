@@ -1,0 +1,25 @@
+# SENSEX option/future expiry rules, versioned by the NOMINAL expiry date (same model as nifty_expiry_rules.toml).
+# Holiday rule (all versions, BSE 20230327-65): if the expiry day is a trading holiday, expiry is the previous trading day.
+# Coverage starts at the 15-May-2023 relaunch (before it: Thursday expiry, lot 15; no Dhan option history exists then).
+underlying = "SENSEX"
+
+[[rule]]
+version = "SENSEX-EXP-FRI"
+effective_from = 2023-05-15
+effective_to = 2025-01-05
+weekday = 4   # Friday; monthly = last Friday of the month
+source = "BSE 20230327-65 (27-Mar-2023): Friday expiry for weekly, monthly and long-dated SENSEX contracts w.e.f. 15-May-2023; BSE 20241128-70: the 3-Jan-2025 (Friday) weekly is unchanged"
+
+[[rule]]
+version = "SENSEX-EXP-TUE"
+effective_from = 2025-01-06
+effective_to = 2025-08-31
+weekday = 1   # Tuesday; monthly = last Tuesday of the month
+source = "BSE 20241128-70 (28-Nov-2024): Tuesday expiry w.e.f. 1-Jan-2025 (first Tuesday weekly 7-Jan-2025, monthly 28-Jan-2025)"
+
+[[rule]]
+version = "SENSEX-EXP-THU"
+effective_from = 2025-09-01
+effective_to = 2099-12-31
+weekday = 3   # Thursday; monthly = last Thursday of the month
+source = "BSE 20250623-59 (23-Jun-2025): contracts expiring after 1-Sep-2025 expire on Thursday (weekly 2-Sep-2025 -> 4-Sep-2025; Sep monthly 25-Sep-2025)"

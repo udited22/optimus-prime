@@ -1,0 +1,1073 @@
+{
+  "$defs": {
+    "Confidence": {
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "$ref": "#/$defs/ConfidenceLevel",
+          "default": "NONE"
+        },
+        "rationale": {
+          "default": "no evidence yet",
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "title": "Confidence",
+      "type": "object"
+    },
+    "ConfidenceLevel": {
+      "enum": [
+        "NONE",
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ],
+      "title": "ConfidenceLevel",
+      "type": "string"
+    },
+    "CostAssumptions": {
+      "additionalProperties": false,
+      "properties": {
+        "brokerage_plan": {
+          "minLength": 1,
+          "title": "Brokerage Plan",
+          "type": "string"
+        },
+        "cost_model_version": {
+          "pattern": "^CM-\\d{4}-\\d{2}-\\d{2}$",
+          "title": "Cost Model Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cost_model_version",
+        "brokerage_plan"
+      ],
+      "title": "CostAssumptions",
+      "type": "object"
+    },
+    "DataAvailability": {
+      "description": "Whether the project can actually get a dataset (docs/architecture/historical-data.md).\nUNVERIFIED = not checked yet.",
+      "enum": [
+        "AVAILABLE",
+        "UNCERTAIN",
+        "UNAVAILABLE",
+        "UNVERIFIED"
+      ],
+      "title": "DataAvailability",
+      "type": "string"
+    },
+    "DataRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "availability": {
+          "$ref": "#/$defs/DataAvailability",
+          "default": "UNVERIFIED"
+        },
+        "dataset": {
+          "minLength": 1,
+          "title": "Dataset",
+          "type": "string"
+        },
+        "fields": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Fields",
+          "type": "array"
+        },
+        "granularity": {
+          "pattern": "^(tick|\\d+(s|m|d))$",
+          "title": "Granularity",
+          "type": "string"
+        },
+        "point_in_time": {
+          "default": true,
+          "title": "Point In Time",
+          "type": "boolean"
+        },
+        "substitute": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Substitute"
+        }
+      },
+      "required": [
+        "dataset",
+        "granularity"
+      ],
+      "title": "DataRequirement",
+      "type": "object"
+    },
+    "Dependencies": {
+      "additionalProperties": false,
+      "properties": {
+        "min_capital_inr": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "const": "pending",
+              "type": "string"
+            }
+          ],
+          "default": "pending",
+          "title": "Min Capital Inr"
+        },
+        "weekly_expiry": {
+          "title": "Weekly Expiry",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "weekly_expiry"
+      ],
+      "title": "Dependencies",
+      "type": "object"
+    },
+    "Entry": {
+      "additionalProperties": false,
+      "properties": {
+        "max_entries_per_day": {
+          "default": 1,
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Max Entries Per Day",
+          "type": "integer"
+        },
+        "order": {
+          "$ref": "#/$defs/EntryOrder"
+        },
+        "trigger": {
+          "minLength": 1,
+          "title": "Trigger",
+          "type": "string"
+        },
+        "window_end": {
+          "format": "time",
+          "title": "Window End",
+          "type": "string"
+        },
+        "window_start": {
+          "format": "time",
+          "title": "Window Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trigger",
+        "window_start",
+        "window_end",
+        "order"
+      ],
+      "title": "Entry",
+      "type": "object"
+    },
+    "EntryOrder": {
+      "additionalProperties": false,
+      "properties": {
+        "max_chase_ticks": {
+          "maximum": 5,
+          "minimum": 0,
+          "title": "Max Chase Ticks",
+          "type": "integer"
+        },
+        "price_rule": {
+          "minLength": 1,
+          "title": "Price Rule",
+          "type": "string"
+        },
+        "ttl_seconds": {
+          "maximum": 60,
+          "minimum": 1,
+          "title": "Ttl Seconds",
+          "type": "integer"
+        },
+        "type": {
+          "const": "LIMIT",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "price_rule",
+        "ttl_seconds",
+        "max_chase_ticks"
+      ],
+      "title": "EntryOrder",
+      "type": "object"
+    },
+    "EventCertification": {
+      "additionalProperties": false,
+      "properties": {
+        "certified_on": {
+          "format": "date",
+          "title": "Certified On",
+          "type": "string"
+        },
+        "data_label": {
+          "const": "REAL",
+          "title": "Data Label",
+          "type": "string"
+        },
+        "event_days": {
+          "minimum": 1,
+          "title": "Event Days",
+          "type": "integer"
+        },
+        "gate_config_version": {
+          "minLength": 1,
+          "title": "Gate Config Version",
+          "type": "string"
+        },
+        "gate_result_id": {
+          "pattern": "^VR-[0-9a-f]{12}$",
+          "title": "Gate Result Id",
+          "type": "string"
+        },
+        "subset": {
+          "const": "HISTORICAL_EVENT_DAYS",
+          "title": "Subset",
+          "type": "string"
+        },
+        "verdict": {
+          "const": "VALIDATED",
+          "title": "Verdict",
+          "type": "string"
+        }
+      },
+      "required": [
+        "gate_result_id",
+        "gate_config_version",
+        "subset",
+        "data_label",
+        "verdict",
+        "event_days",
+        "certified_on"
+      ],
+      "title": "EventCertification",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "backtest_dataset": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceRef"
+            },
+            {
+              "const": "pending",
+              "type": "string"
+            }
+          ],
+          "default": "pending",
+          "title": "Backtest Dataset"
+        },
+        "holdout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceRef"
+            },
+            {
+              "const": "pending",
+              "type": "string"
+            }
+          ],
+          "default": "pending",
+          "title": "Holdout"
+        },
+        "in_sample": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceRef"
+            },
+            {
+              "const": "pending",
+              "type": "string"
+            }
+          ],
+          "default": "pending",
+          "title": "In Sample"
+        },
+        "live": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceRef"
+            },
+            {
+              "const": "pending",
+              "type": "string"
+            }
+          ],
+          "default": "pending",
+          "title": "Live"
+        },
+        "out_of_sample": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceRef"
+            },
+            {
+              "const": "pending",
+              "type": "string"
+            }
+          ],
+          "default": "pending",
+          "title": "Out Of Sample"
+        },
+        "paper": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceRef"
+            },
+            {
+              "const": "pending",
+              "type": "string"
+            }
+          ],
+          "default": "pending",
+          "title": "Paper"
+        },
+        "shadow": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceRef"
+            },
+            {
+              "const": "pending",
+              "type": "string"
+            }
+          ],
+          "default": "pending",
+          "title": "Shadow"
+        },
+        "stress": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceRef"
+            },
+            {
+              "const": "pending",
+              "type": "string"
+            }
+          ],
+          "default": "pending",
+          "title": "Stress"
+        },
+        "walk_forward": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceRef"
+            },
+            {
+              "const": "pending",
+              "type": "string"
+            }
+          ],
+          "default": "pending",
+          "title": "Walk Forward"
+        }
+      },
+      "title": "Evidence",
+      "type": "object"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "description": "Pointer to a pipeline artifact; produced_by must be a pipeline/validation identity.",
+      "properties": {
+        "artifact": {
+          "minLength": 1,
+          "title": "Artifact",
+          "type": "string"
+        },
+        "produced_by": {
+          "minLength": 1,
+          "title": "Produced By",
+          "type": "string"
+        },
+        "run_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Run Ids",
+          "type": "array"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact",
+        "sha256",
+        "produced_by"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "Exit": {
+      "additionalProperties": false,
+      "properties": {
+        "max_holding_minutes": {
+          "maximum": 345,
+          "minimum": 1,
+          "title": "Max Holding Minutes",
+          "type": "integer"
+        },
+        "profit_taking": {
+          "minLength": 1,
+          "title": "Profit Taking",
+          "type": "string"
+        },
+        "stop": {
+          "$ref": "#/$defs/Stop"
+        },
+        "time_exit": {
+          "format": "time",
+          "title": "Time Exit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stop",
+        "profit_taking",
+        "time_exit",
+        "max_holding_minutes"
+      ],
+      "title": "Exit",
+      "type": "object"
+    },
+    "ExpectedSlippage": {
+      "additionalProperties": false,
+      "properties": {
+        "entry_ticks": {
+          "minimum": 0,
+          "title": "Entry Ticks",
+          "type": "integer"
+        },
+        "exit_ticks": {
+          "minimum": 0,
+          "title": "Exit Ticks",
+          "type": "integer"
+        },
+        "source": {
+          "$ref": "#/$defs/SlippageSource"
+        },
+        "stop_ticks": {
+          "minimum": 0,
+          "title": "Stop Ticks",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "entry_ticks",
+        "exit_ticks",
+        "stop_ticks",
+        "source"
+      ],
+      "title": "ExpectedSlippage",
+      "type": "object"
+    },
+    "InvalidationAction": {
+      "enum": [
+        "EXIT_POSITION",
+        "CANCEL_ENTRY",
+        "STAND_DOWN_DAY"
+      ],
+      "title": "InvalidationAction",
+      "type": "string"
+    },
+    "InvalidationKind": {
+      "enum": [
+        "REGIME_CHANGE",
+        "PRICE_LEVEL",
+        "TIME",
+        "VOLATILITY",
+        "DATA"
+      ],
+      "title": "InvalidationKind",
+      "type": "string"
+    },
+    "InvalidationRule": {
+      "additionalProperties": false,
+      "description": "A condition that says the thesis is wrong *now*, before the stop is hit (docs/architecture/strategyspec.md).",
+      "properties": {
+        "action": {
+          "$ref": "#/$defs/InvalidationAction"
+        },
+        "description": {
+          "minLength": 10,
+          "title": "Description",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/InvalidationKind"
+        },
+        "regimes": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Regime"
+          },
+          "title": "Regimes",
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "kind",
+        "description",
+        "action"
+      ],
+      "title": "InvalidationRule",
+      "type": "object"
+    },
+    "Leg": {
+      "additionalProperties": false,
+      "description": "One option leg. OD-006: only BUY legs exist; the literal makes a SELL leg unrepresentable.",
+      "properties": {
+        "instrument": {
+          "const": "INDEX_OPTION",
+          "default": "INDEX_OPTION",
+          "title": "Instrument",
+          "type": "string"
+        },
+        "right": {
+          "$ref": "#/$defs/LegRight"
+        },
+        "side": {
+          "const": "BUY",
+          "title": "Side",
+          "type": "string"
+        },
+        "underlying": {
+          "const": "NIFTY",
+          "default": "NIFTY",
+          "title": "Underlying",
+          "type": "string"
+        }
+      },
+      "required": [
+        "side",
+        "right"
+      ],
+      "title": "Leg",
+      "type": "object"
+    },
+    "LegRight": {
+      "enum": [
+        "CE",
+        "PE",
+        "SIGNAL"
+      ],
+      "title": "LegRight",
+      "type": "string"
+    },
+    "Lifecycle": {
+      "enum": [
+        "RESEARCH",
+        "BACKTESTED",
+        "VALIDATED",
+        "PAPER",
+        "SHADOW",
+        "CANARY",
+        "PRODUCTION",
+        "DEGRADED",
+        "QUARANTINED",
+        "RETIRED"
+      ],
+      "title": "Lifecycle",
+      "type": "string"
+    },
+    "Lineage": {
+      "additionalProperties": false,
+      "properties": {
+        "approvals": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Approvals",
+          "type": "array"
+        },
+        "code_sha": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{7,64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code Sha"
+        },
+        "data_manifest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Data Manifest"
+        },
+        "experiment_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Experiment Ids",
+          "type": "array"
+        }
+      },
+      "title": "Lineage",
+      "type": "object"
+    },
+    "Param": {
+      "additionalProperties": false,
+      "description": "A tunable parameter: the value under test and the range used by perturbation tests.",
+      "properties": {
+        "max": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Max"
+        },
+        "min": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Min"
+        },
+        "step": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Step"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "value",
+        "min",
+        "max"
+      ],
+      "title": "Param",
+      "type": "object"
+    },
+    "Regime": {
+      "description": "Regime tags. Three are *dimensions* with exactly one value at a time (``REGIME_DIMENSIONS``): the trend, the\nvolatility state and the opening character; the rest are *conditions* that are either present or not.",
+      "enum": [
+        "TRENDING_UP",
+        "TRENDING_DOWN",
+        "MEAN_REVERTING",
+        "VOLATILITY_EXPANSION",
+        "VOLATILITY_COMPRESSION",
+        "VOLATILITY_NORMAL",
+        "OPENING_DRIVE",
+        "OPENING_REVERSION",
+        "GAP_REGIME",
+        "EXPIRY_REGIME",
+        "EVENT_REGIME",
+        "LOW_LIQUIDITY",
+        "ABNORMAL_MARKET",
+        "NO_EDGE"
+      ],
+      "title": "Regime",
+      "type": "string"
+    },
+    "Selection": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_zero_dte": {
+          "default": false,
+          "title": "Allow Zero Dte",
+          "type": "boolean"
+        },
+        "expiry": {
+          "minLength": 1,
+          "title": "Expiry",
+          "type": "string"
+        },
+        "strike": {
+          "minLength": 1,
+          "title": "Strike",
+          "type": "string"
+        }
+      },
+      "required": [
+        "expiry",
+        "strike"
+      ],
+      "title": "Selection",
+      "type": "object"
+    },
+    "Signal": {
+      "additionalProperties": false,
+      "properties": {
+        "formula": {
+          "minLength": 1,
+          "title": "Formula",
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Param"
+          },
+          "title": "Params",
+          "type": "object"
+        }
+      },
+      "required": [
+        "formula"
+      ],
+      "title": "Signal",
+      "type": "object"
+    },
+    "Sizing": {
+      "additionalProperties": false,
+      "properties": {
+        "max_lots": {
+          "maximum": 1,
+          "minimum": 1,
+          "title": "Max Lots",
+          "type": "integer"
+        },
+        "method": {
+          "minLength": 1,
+          "title": "Method",
+          "type": "string"
+        },
+        "risk_at_stop_formula": {
+          "minLength": 1,
+          "title": "Risk At Stop Formula",
+          "type": "string"
+        }
+      },
+      "required": [
+        "method",
+        "max_lots",
+        "risk_at_stop_formula"
+      ],
+      "title": "Sizing",
+      "type": "object"
+    },
+    "SlippageSource": {
+      "enum": [
+        "measured",
+        "assumed"
+      ],
+      "title": "SlippageSource",
+      "type": "string"
+    },
+    "Stop": {
+      "additionalProperties": false,
+      "description": "Every position has a price stop; a time exit alone does not bound the loss for the Governor.",
+      "properties": {
+        "limit_offset_ticks": {
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Limit Offset Ticks",
+          "type": "integer"
+        },
+        "method": {
+          "$ref": "#/$defs/StopMethod"
+        },
+        "order": {
+          "const": "SL_LIMIT",
+          "title": "Order",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "method",
+        "value",
+        "order",
+        "limit_offset_ticks"
+      ],
+      "title": "Stop",
+      "type": "object"
+    },
+    "StopMethod": {
+      "enum": [
+        "PREMIUM_PCT",
+        "PREMIUM_POINTS",
+        "UNDERLYING_LEVEL"
+      ],
+      "title": "StopMethod",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "capacity": {
+      "minLength": 1,
+      "title": "Capacity",
+      "type": "string"
+    },
+    "confidence": {
+      "$ref": "#/$defs/Confidence"
+    },
+    "cost_assumptions": {
+      "$ref": "#/$defs/CostAssumptions"
+    },
+    "cost_sensitivity": {
+      "minLength": 20,
+      "title": "Cost Sensitivity",
+      "type": "string"
+    },
+    "created": {
+      "format": "date",
+      "title": "Created",
+      "type": "string"
+    },
+    "dependencies": {
+      "$ref": "#/$defs/Dependencies"
+    },
+    "economic_rationale": {
+      "minLength": 20,
+      "title": "Economic Rationale",
+      "type": "string"
+    },
+    "eligible_regimes": {
+      "items": {
+        "$ref": "#/$defs/Regime"
+      },
+      "minItems": 1,
+      "title": "Eligible Regimes",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "entry": {
+      "$ref": "#/$defs/Entry"
+    },
+    "event_certification": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EventCertification"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "event_certified": {
+      "default": false,
+      "title": "Event Certified",
+      "type": "boolean"
+    },
+    "evidence": {
+      "$ref": "#/$defs/Evidence"
+    },
+    "exit": {
+      "$ref": "#/$defs/Exit"
+    },
+    "expected_frequency": {
+      "minLength": 1,
+      "title": "Expected Frequency",
+      "type": "string"
+    },
+    "expected_slippage": {
+      "$ref": "#/$defs/ExpectedSlippage"
+    },
+    "failure_modes": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Failure Modes",
+      "type": "array"
+    },
+    "falsification_criteria": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Falsification Criteria",
+      "type": "array"
+    },
+    "hypothesis": {
+      "minLength": 20,
+      "title": "Hypothesis",
+      "type": "string"
+    },
+    "id": {
+      "pattern": "^[SF]-[A-Z0-9]+-\\d{3}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "invalidation_rules": {
+      "items": {
+        "$ref": "#/$defs/InvalidationRule"
+      },
+      "minItems": 1,
+      "title": "Invalidation Rules",
+      "type": "array"
+    },
+    "legs": {
+      "items": {
+        "$ref": "#/$defs/Leg"
+      },
+      "maxItems": 2,
+      "minItems": 1,
+      "title": "Legs",
+      "type": "array"
+    },
+    "lineage": {
+      "$ref": "#/$defs/Lineage"
+    },
+    "owner_agent": {
+      "minLength": 1,
+      "title": "Owner Agent",
+      "type": "string"
+    },
+    "prohibited_regimes": {
+      "items": {
+        "$ref": "#/$defs/Regime"
+      },
+      "title": "Prohibited Regimes",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "required_data": {
+      "items": {
+        "$ref": "#/$defs/DataRequirement"
+      },
+      "minItems": 1,
+      "title": "Required Data",
+      "type": "array"
+    },
+    "required_regimes": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Regime"
+      },
+      "title": "Required Regimes",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "retirement_criteria": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Retirement Criteria",
+      "type": "array"
+    },
+    "selection": {
+      "$ref": "#/$defs/Selection"
+    },
+    "signal": {
+      "$ref": "#/$defs/Signal"
+    },
+    "sizing": {
+      "$ref": "#/$defs/Sizing"
+    },
+    "status": {
+      "$ref": "#/$defs/Lifecycle",
+      "default": "RESEARCH"
+    },
+    "version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "owner_agent",
+    "created",
+    "hypothesis",
+    "economic_rationale",
+    "required_data",
+    "signal",
+    "legs",
+    "eligible_regimes",
+    "prohibited_regimes",
+    "invalidation_rules",
+    "selection",
+    "entry",
+    "exit",
+    "sizing",
+    "expected_frequency",
+    "expected_slippage",
+    "cost_assumptions",
+    "capacity",
+    "failure_modes",
+    "falsification_criteria",
+    "cost_sensitivity",
+    "dependencies",
+    "retirement_criteria"
+  ],
+  "title": "StrategySpec",
+  "type": "object"
+}

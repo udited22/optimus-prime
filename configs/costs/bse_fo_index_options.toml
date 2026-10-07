@@ -1,0 +1,105 @@
+# Statutory + exchange charges for BSE SENSEX index OPTIONS (premium-based). Versioned by effective date.
+# Same component model as nse_fo_index_options.toml; only the EXCHANGE TRANSACTION CHARGE differs (BSE's own notices).
+# Brokerage is NOT here (brokerage_plans.toml). A schedule with verified = false is refused unless allow_unverified=True.
+#
+# BSE transaction charges for SENSEX options (official BSE notices, read 3-Oct-2026 on bseindia.com; the BSE
+# 'Derivatives - Transaction Fees' page https://www.bseindia.com/static/members/TFDerivative.aspx lists exactly
+# 20190819-14, 20220425-2, 20231020-46, 20231027-56, 20240430-42 and 20240927-37; nothing newer is listed):
+#   20220425-2 (25-Apr-2022): from 2-May-2022 ALL options (index and stock) Rs 500 per crore of premium turnover.
+#   20231020-46 (20-Oct-2023): from 1-Nov-2023 NEAREST-expiry SENSEX options billed to MEMBERS by monthly
+#       incremental slab: Rs 500/cr up to Rs 3 cr, 3,750 (3-100 cr), 3,500, 3,000, 2,500, 2,000 (> 2,000 cr).
+#       Non-nearest expiries stayed at Rs 500/cr. (20231027-56 only adds the member billing file.)
+#   20240430-42 (30-Apr-2024): from 13-May-2024 SENSEX + BANKEX options (combined) by slab: 500 / 4,950 / 4,700 /
+#       4,200 / 3,700 / 2,950 per crore.
+#   20240927-37 (27-Sep-2024): from 1-Oct-2024 (SEBI 'true to label', SEBI/HO/MRD/TPD-1/P/CIR/2024/92) a flat
+#       Rs 3,250 per crore of premium turnover for SENSEX options, all expiries. (NSE index options: Rs 3,553/cr.)
+# Slab periods are MEMBER billing; the client rate depends on the broker. Those schedules use the band most
+# turnover falls in (3-100 cr: Rs 3,750 then 4,950), a conservative assumption, and stay verified = false.
+# STT, SEBI fee, stamp duty and GST are central/statutory and identical to the NSE book (sources there); BSE notice
+# 20260331-7 states the same STT rates up to 31-Mar-2026. Coverage starts at the SENSEX derivatives relaunch
+# (15-May-2023, BSE notice 20230327-65), the start of Dhan's SENSEX option history.
+
+book_id = "BSE-FO-IDXOPT"
+currency = "INR"
+config_version = "2026-10-03.1"
+
+[[schedule]]
+version = "BSE-2023-05-15"
+effective_from = 2023-05-15
+effective_to = 2023-10-31
+stt_sell_rate = "0.000625"
+stt_exercise_rate = "0.00125"
+exchange_txn_rate = "0.00005"       # Rs 500 per crore of premium (BSE 20220425-2)
+sebi_fee_per_crore = "10"
+stamp_buy_rate = "0.00003"
+gst_rate = "0.18"
+verified = true
+verified_on = 2026-10-03
+sources = [
+    "BSE notice 20220425-2 (25-Apr-2022) https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20220425-2",
+    "BSE notice 20230327-65 (27-Mar-2023) SENSEX relaunch w.e.f. 15-May-2023 https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20230327-65",
+    "STT / SEBI fee / stamp / GST: see configs/costs/nse_fo_index_options.toml schedule CM-2023-04-01",
+]
+
+[[schedule]]
+version = "BSE-2023-11-01"
+effective_from = 2023-11-01
+effective_to = 2024-05-12
+stt_sell_rate = "0.000625"
+stt_exercise_rate = "0.00125"
+exchange_txn_rate = "0.000375"      # ASSUMED client rate: the Rs 3,750/cr member slab (3-100 cr) for nearest expiry
+sebi_fee_per_crore = "10"
+stamp_buy_rate = "0.00003"
+gst_rate = "0.18"
+verified = false
+notes = "Member slab billing (nearest-expiry SENSEX options); non-nearest expiries Rs 500/cr. Client pass-through rate is broker-specific and not verified."
+sources = [
+    "BSE notice 20231020-46 (20-Oct-2023) https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20231020-46",
+    "BSE notice 20231027-56 (27-Oct-2023) https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20231027-56",
+]
+
+[[schedule]]
+version = "BSE-2024-05-13"
+effective_from = 2024-05-13
+effective_to = 2024-09-30
+stt_sell_rate = "0.000625"
+stt_exercise_rate = "0.00125"
+exchange_txn_rate = "0.000495"      # ASSUMED client rate: the Rs 4,950/cr member slab (3-100 cr), all expiries
+sebi_fee_per_crore = "10"
+stamp_buy_rate = "0.00003"
+gst_rate = "0.18"
+verified = false
+notes = "Member slab billing on combined SENSEX + BANKEX option premium; client pass-through rate is broker-specific and not verified."
+sources = ["BSE notice 20240430-42 (30-Apr-2024) https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20240430-42"]
+
+[[schedule]]
+version = "BSE-2024-10-01"
+effective_from = 2024-10-01
+effective_to = 2026-03-31
+stt_sell_rate = "0.0010"
+stt_exercise_rate = "0.00125"
+exchange_txn_rate = "0.000325"      # Rs 3,250 per crore of premium, SENSEX options all expiries (BSE 20240927-37)
+sebi_fee_per_crore = "10"
+stamp_buy_rate = "0.00003"
+gst_rate = "0.18"
+verified = true
+verified_on = 2026-10-03
+notes = "True-to-label flat rate. BSE lists no separate IPF contribution line for clients in the notice; none is added."
+sources = [
+    "BSE notice 20240927-37 (27-Sep-2024), copy https://www.steelcitynettrade.com/Circulars/BSE-Revision%20in%20Transaction%20Charges%20in%20Equity%20Derivatives%20Segment.pdf and BSE intimation to NSE https://nsearchives.nseindia.com/corporate/BSE_27092024184037_NSEintimation.pdf",
+    "BSE transaction-fee index page https://www.bseindia.com/static/members/TFDerivative.aspx",
+    "STT 0.10% / 0.125% to 31-Mar-2026: BSE notice 20260331-7 https://www.bseindia.com/downloads/UploadDocs/Notices/20260331-7/20260331-7.pdf",
+]
+
+[[schedule]]
+version = "BSE-2026-04-01"
+effective_from = 2026-04-01
+stt_sell_rate = "0.0015"            # Finance Act 2026 (same as NSE book CM-2026-04-01)
+stt_exercise_rate = "0.0015"
+exchange_txn_rate = "0.000325"      # no later BSE revision listed (TFDerivative page, read 3-Oct-2026)
+sebi_fee_per_crore = "10"
+stamp_buy_rate = "0.00003"
+gst_rate = "0.18"
+verified = true
+verified_on = 2026-10-03
+sources = ["BSE notice 20240927-37 (27-Sep-2024)", "STT: configs/costs/nse_fo_index_options.toml schedule CM-2026-04-01 sources"]

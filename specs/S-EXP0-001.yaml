@@ -1,0 +1,135 @@
+# S-EXP0-001 (docs/research/strategy-hypotheses.md strategy library). RESEARCH: no evidence, no confidence. Param values are pre-registered
+# priors, not fitted numbers. Every number here is ASSUMED until validated on real data.
+id: S-EXP0-001
+version: 0.1.0
+status: RESEARCH
+owner_agent: research.library
+created: '2026-10-02'
+hypothesis: On NIFTY weekly expiry days after 13:00, a new session extreme with a 15-minute move >= 0.25% extends further
+  before 14:50 more often than the 0-DTE option prices imply.
+economic_rationale: Large short-gamma open interest held by option writers on expiry day means their delta-hedging adds
+  to moves (dealer-gamma feedback).
+required_data:
+- dataset: nifty_index_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  availability: UNVERIFIED
+- dataset: nifty_opt_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  - volume
+  availability: UNVERIFIED
+- dataset: india_vix_1m
+  granularity: 1m
+  availability: UNVERIFIED
+signal:
+  formula: 'expiry day, after 13:00: close > every earlier high and 15-min return >= mom_pct -> BUY CE (1 OTM); mirror ->
+    BUY PE'
+  params:
+    mom_minutes:
+      value: 15
+      min: 10
+      max: 30
+      step: 5
+    mom_pct:
+      value: 0.25
+      min: 0.15
+      max: 0.5
+      step: 0.05
+    otm_steps:
+      value: 1
+      min: 0
+      max: 3
+      step: 1
+legs:
+- side: BUY
+  right: SIGNAL
+eligible_regimes:
+- TRENDING_UP
+- TRENDING_DOWN
+prohibited_regimes:
+- EVENT_REGIME
+- LOW_LIQUIDITY
+- ABNORMAL_MARKET
+- NO_EDGE
+required_regimes:
+- EXPIRY_REGIME
+invalidation_rules:
+- kind: PRICE_LEVEL
+  description: a close back through the 15-minute swing low (high) of the signal
+  action: EXIT_POSITION
+- kind: REGIME_CHANGE
+  description: the market turns abnormal
+  action: EXIT_POSITION
+  regimes:
+  - ABNORMAL_MARKET
+- kind: TIME
+  description: 'theta: a stalled move is exited by the 30-minute maximum hold'
+  action: EXIT_POSITION
+- kind: DATA
+  description: 'the index or option bar of a minute is missing: no entry on that minute'
+  action: CANCEL_ENTRY
+selection:
+  expiry: the expiring weekly (0 DTE) on expiry day
+  strike: 1 strike OTM in the signal direction
+  allow_zero_dte: true
+entry:
+  trigger: first expiry-day new extreme with momentum after 13:00
+  window_start: '13:00:00'
+  window_end: '14:00:00'
+  order:
+    type: LIMIT
+    price_rule: last option close + 1 tick (mid proxy), chase capped at first limit + max_chase_ticks
+    ttl_seconds: 60
+    max_chase_ticks: 2
+  max_entries_per_day: 1  # OD-014 style default (docs/research/strategy-hypotheses.md entry caps): one expiry-afternoon window
+exit:
+  stop:
+    method: PREMIUM_PCT
+    value: 25
+    order: SL_LIMIT
+    limit_offset_ticks: 2
+  profit_taking: 4 R (= 2x premium with the 25% stop)
+  time_exit: '14:45:00'
+  max_holding_minutes: 30
+sizing:
+  method: 1 lot per leg if the summed risk_at_stop <= the per-trade budget (2% NAV) else NO TRADE
+  max_lots: 1
+  risk_at_stop_formula: sum over legs of (entry - stop_limit) * lot + round-trip charges + (entry+stop slippage ticks) *
+    tick * lot
+expected_frequency: 0-1 per week (expiry days only)
+expected_slippage:
+  entry_ticks: 1
+  exit_ticks: 1
+  stop_ticks: 2
+  source: assumed
+cost_assumptions:
+  cost_model_version: CM-2026-04-01
+  brokerage_plan: upstox-options
+capacity: high relative to one lot (NIFTY weekly ATM liquidity)
+failure_modes:
+- theta collapse on a stalled move
+- pinning near max-OI strikes
+- spreads are a large share of cheap premiums
+falsification_criteria:
+- OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0
+- the extension rate after the signal is not above the rate implied by the 0-DTE option's delta and price
+cost_sensitivity: 'The most cost-sensitive at small size: on an INR 8 premium, INR 40 round-trip brokerage is INR 0.6 per
+  unit (7.7% of premium) before statutory charges and 1-2 ticks of spread (0.6-1.2% per tick). At Upstox INR 20/order it
+  is ineligible at INR 10k NAV (docs/research/strategy-hypotheses.md H07).'
+dependencies:
+  weekly_expiry: true
+retirement_criteria:
+- OOS expectancy CI upper bound < 0
+- live slippage > 2x assumed over 20 trades
+# Event days (OD-014 default, 2-Oct-2026): NOT certified, so no entries on an EVENT_REGIME day. Setting true needs
+# an event_certification record from validation/event_cert.py (VALIDATED on historical event-day trades, REAL data).
+event_certified: false

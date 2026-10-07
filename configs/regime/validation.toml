@@ -1,0 +1,42 @@
+# Regime-classifier validation criteria (docs/research/validation.md §13.5). Pre-registered on 3-Oct-2026 BEFORE any classifier label on
+# real data was examined; versioned like every other threshold: a change is a new [[validation]] block, never an edit
+# after seeing results. Evaluated by project100c.regime.validation through scripts/regime_research.py.
+#
+# What "validated" means here. The classifier is a description of the current intraday state; it is useful to the
+# strategies only if (a) its labels persist long enough to act on (stability), and (b) what it calls a trend, a range,
+# a compression or an expansion is followed by what those words promise, out of sample (predictive validity against
+# EX-ANTE defined, future-realised labels, used for evaluation only and never as features).
+#
+# Samples: one per session every `sample_every_minutes` from the first non-warm-up label to the last bar whose
+# `horizon_minutes` forward window ends inside the session. Inference: day-block bootstrap (resample whole sessions).
+
+[[validation]]
+version = "RV-2026-10-03.1"
+adopted_on = 2026-10-03
+in_sample = [2022-07-25, 2024-06-30]          # calibration only (a v1 may be tuned on these dates, never on OOS)
+out_of_sample = [2024-07-01, 2026-03-31]      # judged once per classifier version (ends where the recent holdout starts)
+holdout = "HD-2026-10-03.1"                   # configs/validation/holdout.toml: every holdout day is dropped before scoring
+horizon_minutes = 30
+sample_every_minutes = 15
+ci_level = "0.90"
+bootstrap_iterations = 2000
+seed = 20261003
+
+# (a) stability, judged on every session with labels (IS and OOS separately; both must pass)
+min_median_trend_run_bars = 20                # median length of a trend label run, in 1-minute bars
+max_median_trend_flips = 8                    # median trend-label changes per session
+min_median_vol_run_bars = 20
+max_median_vol_flips = 8
+
+# (b) predictive validity, each judged on OOS: point estimate > 0 AND the CI lower bound > 0, the IS point estimate
+# must have the same sign, and the sign must hold in at least `min_years_same_sign` of the calendar years with data.
+#  TREND_DIRECTION  mean of s * forward return (bp), s = +1 for UP, -1 for DOWN (RANGE samples excluded)
+#  TREND_MAGNITUDE  mean |forward return| (bp) on UP/DOWN samples minus on RANGE samples
+#  VOL_LOW          forward realised vol (annualised %) on NORMAL minus on COMPRESSION samples
+#  VOL_HIGH         forward realised vol on EXPANSION minus on NORMAL samples
+min_years_same_sign = 3
+
+# Confusion matrices (reported, not judged): realised trend = UP / DOWN when the forward return exceeds
+# +/- `realised_trend_k` x the trailing 30-bar return sd x sqrt(horizon), else RANGE; realised vol = the forward
+# realised-vol tercile, cut points fixed on the IS samples.
+realised_trend_k = "1.0"

@@ -1,0 +1,31 @@
+# Validation gates V1-V18 (docs/research/validation.md §13.2): the thresholds the toolkit applies. Versioned; changing a threshold is a
+# new version and a git commit, never an edit after seeing results. The pass criteria are docs/research/validation.md's; the
+# simulation sizes (bootstrap / Monte Carlo iterations) are ASSUMED and only trade precision for speed.
+
+[[gates]]
+version = "VG-2026-10-02.1"
+adopted_on = 2026-10-02
+seed = 20261002                    # every resampling is seeded: the report is reproducible
+
+ci_level = "0.90"                  # V5: 90% block-bootstrap CI (blocks = trading days)
+bootstrap_iterations = 2000
+min_oos_trades = 100               # V6
+min_recent_era_trades = 40         # V6 (era from 1-Sep-2025)
+top_trade_share = "0.05"           # V7: top 5% of trades ...
+top_trade_max_pnl_share = "0.5"    # ... must contribute < 50% of net P&L
+grid_positive_share = "0.70"       # V8
+grid_neighbour_median_share = "0.5"
+dsr_min = "0.95"                   # V9: Deflated Sharpe probability
+slippage_multiple = "2"            # V10
+charges_multiple = "1.25"
+missed_entry_frac = "0.10"         # V12
+worse_stop_frac = "0.05"
+worse_stop_ticks = 3
+degraded_iterations = 1000
+mc_iterations = 10000              # V13
+mc_max_dd_frac = "0.15"
+mc_max_dd_prob = "0.05"
+mc_ruin_frac = "0.50"
+mc_ruin_prob = "0.001"
+regime_min_trades = 10             # V14: a regime slice with fewer trades is reported but not judged
+tick = "0.05"

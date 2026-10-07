@@ -1,0 +1,126 @@
+# S-GAPFADE-001 (docs/research/strategy-hypotheses.md strategy library). RESEARCH: no evidence, no confidence. Param values are pre-registered
+# priors, not fitted numbers. Every number here is ASSUMED until validated on real data.
+id: S-GAPFADE-001
+version: 0.1.0
+status: RESEARCH
+owner_agent: research.library
+created: '2026-10-02'
+hypothesis: A NIFTY opening gap of >= 0.5% whose first 30 minutes revert (the classifier's OPENING_REVERSION) goes on to
+  fill the gap to the previous close more often than it resumes beyond the opening range.
+economic_rationale: The opening auction overreacts to thin overnight information; when early trade rejects the gap, trapped
+  gap-chasers exit and the gap fills.
+required_data:
+- dataset: nifty_index_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  availability: UNVERIFIED
+- dataset: nifty_opt_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  - volume
+  availability: UNVERIFIED
+- dataset: india_vix_1m
+  granularity: 1m
+  availability: UNVERIFIED
+signal:
+  formula: gap >= gap_min_pct and opening == MEAN_REVERSION and prev_close < close < open -> BUY PE; mirror -> BUY CE
+  params:
+    gap_min_pct:
+      value: 0.5
+      min: 0.3
+      max: 1.0
+      step: 0.1
+    or_window_minutes:
+      value: 30
+      min: 15
+      max: 45
+      step: 15
+legs:
+- side: BUY
+  right: SIGNAL
+eligible_regimes:
+- OPENING_REVERSION
+- GAP_REGIME
+prohibited_regimes:
+- EVENT_REGIME
+- LOW_LIQUIDITY
+- ABNORMAL_MARKET
+- NO_EDGE
+required_regimes:
+- GAP_REGIME
+invalidation_rules:
+- kind: PRICE_LEVEL
+  description: a close beyond the opening range in the gap direction (the gap resumes)
+  action: EXIT_POSITION
+- kind: REGIME_CHANGE
+  description: the market turns abnormal
+  action: EXIT_POSITION
+  regimes:
+  - ABNORMAL_MARKET
+- kind: TIME
+  description: no fill within the 90-minute maximum hold
+  action: EXIT_POSITION
+- kind: DATA
+  description: 'the index or option bar of a minute is missing: no entry on that minute'
+  action: CANCEL_ENTRY
+selection:
+  expiry: nearest weekly with DTE >= 1
+  strike: ATM (nearest the index); delta band not implemented
+entry:
+  trigger: first close back through the open toward the previous close after 09:45
+  window_start: 09:45:00
+  window_end: '11:30:00'
+  order:
+    type: LIMIT
+    price_rule: last option close + 1 tick (mid proxy), chase capped at first limit + max_chase_ticks
+    ttl_seconds: 60
+    max_chase_ticks: 2
+  max_entries_per_day: 1  # OD-014 style default (docs/research/strategy-hypotheses.md entry caps): one opening gap a day: the setup exists once
+exit:
+  stop:
+    method: PREMIUM_PCT
+    value: 30
+    order: SL_LIMIT
+    limit_offset_ticks: 4
+  profit_taking: gap fill to the previous close (plug-in target)
+  time_exit: '14:00:00'
+  max_holding_minutes: 90
+sizing:
+  method: 1 lot per leg if the summed risk_at_stop <= the per-trade budget (2% NAV) else NO TRADE
+  max_lots: 1
+  risk_at_stop_formula: sum over legs of (entry - stop_limit) * lot + round-trip charges + (entry+stop slippage ticks) *
+    tick * lot
+expected_frequency: 0-2 per week (gap days only)
+expected_slippage:
+  entry_ticks: 1
+  exit_ticks: 1
+  stop_ticks: 2
+  source: assumed
+cost_assumptions:
+  cost_model_version: CM-2026-04-01
+  brokerage_plan: upstox-options
+capacity: high relative to one lot (NIFTY weekly ATM liquidity)
+failure_modes:
+- news gaps that keep going
+- 'partial fills: the gap fills only halfway and the trade times out'
+falsification_criteria:
+- OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0
+- gap-fill rates on reversion-open days are not above those on all gap days
+cost_sensitivity: The target is the remaining gap (typically 50-120 index points, 25-60 premium points at delta 0.5); costs
+  are 3-8% of it, rising sharply on smaller gaps, hence the 0.5% minimum.
+dependencies:
+  weekly_expiry: true
+retirement_criteria:
+- OOS expectancy CI upper bound < 0
+- live slippage > 2x assumed over 20 trades
+# Event days (OD-014 default, 2-Oct-2026): NOT certified, so no entries on an EVENT_REGIME day. Setting true needs
+# an event_certification record from validation/event_cert.py (VALIDATED on historical event-day trades, REAL data).
+event_certified: false

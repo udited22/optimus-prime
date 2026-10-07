@@ -1,0 +1,64 @@
+# Crypto research universe: bitcoin plus the top 10 tokens by market cap, quoted in
+# USDT on Binance. Determined POINT-IN-TIME on 3-Oct-2026 ~21:55 IST from CoinLore's keyless public ticker API
+# (https://api.coinlore.net/api/tickers/; CoinGecko's free API answered HTTP 429 and CoinPaprika HTTP 402 from
+# the box at the time). The raw snapshot is stored in the gitignored lake (lake/crypto/raw/coinlore/...).
+# SURVIVORSHIP BIAS: this is TODAY's top 10. It was not the top 10 in 2021 (e.g. HYPE did not exist, LUNA, DOT,
+# MATIC, AVAX and ADA ranked high then). Any backtest across this universe must say so; no free point-in-time
+# membership history was found (see docs/data/crypto-coverage-2026-10-03.md).
+version = "CRYPTO-UNIVERSE-2026-10-03.1"
+as_of_utc = "2026-10-03T16:25:00Z"
+ranking_source = "https://api.coinlore.net/api/tickers/?start=0&limit=40"
+quote = "USDT"
+top_n = 10
+
+# Excluded before ranking: stablecoins and wrapped / staked / bridged duplicates of another asset.
+exclude_stablecoins = ["USDT", "USDC", "USDe", "DAI", "BFUSD", "FDUSD", "TUSD", "USDD", "PYUSD", "USD1", "USDS", "USDP", "BUSD", "RLUSD", "USDTB", "USDG", "USDF"]
+exclude_wrapped_or_staked = ["STETH", "WSTETH", "WBTC", "WETH", "WEETH", "WBETH", "CBBTC", "RETH", "METH", "BTCB", "SOLVBTC", "LBTC", "CBETH", "EZETH", "BSC-USD", "JITOSOL", "MSOL", "LSETH"]
+
+# The selection from that snapshot (rank = CoinLore rank incl. stablecoins; cap in USD billions, rounded).
+[[symbols]]
+asset = "BTC"
+rank = 1
+cap_usd_bn = "1694.4"
+[[symbols]]
+asset = "ETH"
+rank = 2
+cap_usd_bn = "327.9"
+[[symbols]]
+asset = "BNB"
+rank = 4
+cap_usd_bn = "108.2"
+[[symbols]]
+asset = "XRP"
+rank = 5
+cap_usd_bn = "89.0"
+[[symbols]]
+asset = "SOL"
+rank = 7
+cap_usd_bn = "65.0"
+[[symbols]]
+asset = "TRX"
+rank = 8
+cap_usd_bn = "31.9"
+[[symbols]]
+asset = "HYPE"
+rank = 9
+cap_usd_bn = "29.7"
+note = "Binance USD-M perp since May-2025; Binance SPOT only since 24-Sep-2026 (daily archive only)"
+[[symbols]]
+asset = "ZEC"
+rank = 11
+cap_usd_bn = "21.1"
+[[symbols]]
+asset = "DOGE"
+rank = 12
+cap_usd_bn = "15.6"
+[[symbols]]
+asset = "XMR"
+rank = 16
+cap_usd_bn = "10.2"
+note = "Binance SPOT delisted 20-Feb-2024 (spot status BREAK); USD-M perp still listed. Spot history ends there"
+[[symbols]]
+asset = "LINK"
+rank = 17
+cap_usd_bn = "9.4"

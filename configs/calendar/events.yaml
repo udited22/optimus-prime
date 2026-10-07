@@ -1,0 +1,206 @@
+# Scheduled market-moving events (docs/risk/risk-engine.md §9.2 "Event days"; K-11 EVENT_REGIME). Schema: schemas/events.schema.json,
+# loader: project100c.calendar.events.load_event_book. Versioned: any change = git commit.
+#
+# Rules:
+# - Every entry carries the URL of the official public source it was checked against.
+# - verified: true only when that official page itself states the date. Anything else is verified: false, and the
+#   strategies and the classifier ignore it (EventBook.to_calendar keeps verified entries only).
+# - No invented dates. An RBI MPC entry is the final day of the meeting, the day the resolution is announced; past
+#   meetings link the resolution itself, future ones the RBI's published schedule (status SCHEDULED).
+# - NSE holiday circulars were not reachable from this host (HTTP 403 on 2-Oct-2026); trading holidays live in
+#   configs/calendar/nse_fo_holidays.toml and are not repeated here.
+# - impact (default same_session): the Indian session the event moves.
+#   - US FOMC statements (2:00 pm ET = 23:30 IST in EDT, 00:30 IST in EST) and US CPI releases (8:30 am ET =
+#     18:00 / 19:00 IST) land after the NSE close (15:30 IST), so they are impact: next_session.
+#   - EVENT_REGIME then applies to the first NSE trading day strictly after the US date (EventBook.to_calendar
+#     with the trading calendar).
+#   - Days beyond the holiday book (2027) are provisional: fixed-date holidays only. Re-check them when the
+#     2027 book lands.
+# - FOMC dates are from the Fed's calendar, which marks each meeting tentative until confirmed at the preceding
+#   meeting; the entry date is the statement day (the meeting's last day).
+# - US CPI dates are from the BLS release schedule. It lists releases to Dec-2026 only; 2027 is not yet
+#   published, so there are no 2027 CPI entries. The page was read with the web fetch tool, because curl from
+#   the box gets HTTP 403.
+schema_version: 1
+version: EV-2026-10-02.3
+adopted_on: 2026-10-02
+checked_on: 2026-10-02
+events:
+  # --- RBI MPC 2025-26 (schedule: Press Release 2024-2025/2464, 26-Mar-2025) ---
+  - date: 2025-04-09
+    type: RBI_MPC_DECISION
+    status: HELD
+    title: MPC resolution, April 7 to 9, 2025
+    source_url: https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=60176
+    verified: true
+  - date: 2025-06-06
+    type: RBI_MPC_DECISION
+    status: HELD
+    title: MPC meeting June 4, 5 and 6, 2025 (final day)
+    source_url: https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=60062
+    verified: true
+  - date: 2025-08-06
+    type: RBI_MPC_DECISION
+    status: HELD
+    title: MPC meeting rescheduled from August 5-7 to August 4-6, 2025 (final day)
+    source_url: https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=60612
+    verified: true
+  - date: 2025-10-01
+    type: RBI_MPC_DECISION
+    status: HELD
+    title: MPC resolution, September 29 to October 1, 2025
+    source_url: https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=61332
+    verified: true
+  - date: 2025-12-05
+    type: RBI_MPC_DECISION
+    status: HELD
+    title: MPC meeting December 3, 4 and 5, 2025 (final day)
+    source_url: https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=60062
+    verified: true
+  # --- Union Budget ---
+  - date: 2026-02-01
+    type: UNION_BUDGET
+    status: HELD
+    title: Union Budget 2026-27 presented in Parliament (a Sunday)
+    source_url: https://www.indiabudget.gov.in/doc/Budget_Speech.pdf
+    verified: true
+  # --- RBI MPC 2025-26 (continued) ---
+  - date: 2026-02-06
+    type: RBI_MPC_DECISION
+    status: HELD
+    title: MPC resolution, February 4 to 6, 2026
+    source_url: https://rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=62169
+    verified: true
+  # --- RBI MPC 2026-27 (schedule: Press Release 2025-2026/2306, 23-Mar-2026) ---
+  - date: 2026-04-08
+    type: RBI_MPC_DECISION
+    status: HELD
+    title: MPC meeting April 6, 7 and 8, 2026 (final day)
+    source_url: https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=62422
+    verified: true
+  - date: 2026-06-05
+    type: RBI_MPC_DECISION
+    status: HELD
+    title: MPC meeting June 3, 4 and 5, 2026 (final day)
+    source_url: https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=62422
+    verified: true
+  - date: 2026-08-05
+    type: RBI_MPC_DECISION
+    status: HELD
+    title: MPC meeting August 3, 4 and 5, 2026 (final day)
+    source_url: https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=62422
+    verified: true
+  - date: 2026-10-07
+    type: RBI_MPC_DECISION
+    status: SCHEDULED
+    title: MPC meeting October 5, 6 and 7, 2026 (final day)
+    source_url: https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=62422
+    verified: true
+  # --- US releases after the NSE close (impact next_session; read 2-Oct-2026 from federalreserve.gov / bls.gov) ---
+  - date: 2026-10-14
+    type: US_CPI_RELEASE
+    status: SCHEDULED
+    title: US CPI for September 2026, BLS release 08:30 AM ET
+    source_url: https://www.bls.gov/schedule/news_release/cpi.htm
+    verified: true
+    impact: next_session
+  - date: 2026-10-28
+    type: US_FOMC_DECISION
+    status: SCHEDULED
+    title: FOMC meeting October 27-28, 2026 (statement 2:00 pm ET; tentative until confirmed)
+    source_url: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+    verified: true
+    impact: next_session
+  - date: 2026-11-10
+    type: US_CPI_RELEASE
+    status: SCHEDULED
+    title: US CPI for October 2026, BLS release 08:30 AM ET
+    source_url: https://www.bls.gov/schedule/news_release/cpi.htm
+    verified: true
+    impact: next_session
+  # --- RBI MPC 2026-27 (continued) ---
+  - date: 2026-12-04
+    type: RBI_MPC_DECISION
+    status: SCHEDULED
+    title: MPC meeting December 2, 3 and 4, 2026 (final day)
+    source_url: https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=62422
+    verified: true
+  # --- US releases after the NSE close (impact next_session; read 2-Oct-2026 from federalreserve.gov / bls.gov) ---
+  - date: 2026-12-09
+    type: US_FOMC_DECISION
+    status: SCHEDULED
+    title: FOMC meeting December 8-9, 2026 (statement 2:00 pm ET, with Summary of Economic Projections; tentative until confirmed)
+    source_url: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+    verified: true
+    impact: next_session
+  - date: 2026-12-10
+    type: US_CPI_RELEASE
+    status: SCHEDULED
+    title: US CPI for November 2026, BLS release 08:30 AM ET
+    source_url: https://www.bls.gov/schedule/news_release/cpi.htm
+    verified: true
+    impact: next_session
+  - date: 2027-01-27
+    type: US_FOMC_DECISION
+    status: SCHEDULED
+    title: FOMC meeting January 26-27, 2027 (statement 2:00 pm ET; tentative until confirmed)
+    source_url: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+    verified: true
+    impact: next_session
+  # --- RBI MPC 2026-27 (continued) ---
+  - date: 2027-02-05
+    type: RBI_MPC_DECISION
+    status: SCHEDULED
+    title: MPC meeting February 3, 4 and 5, 2027 (final day)
+    source_url: https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=62422
+    verified: true
+  # --- US releases after the NSE close (impact next_session; read 2-Oct-2026 from federalreserve.gov / bls.gov) (BLS has not published its 2027 CPI schedule) ---
+  - date: 2027-03-17
+    type: US_FOMC_DECISION
+    status: SCHEDULED
+    title: FOMC meeting March 16-17, 2027 (statement 2:00 pm ET, with Summary of Economic Projections; tentative until confirmed)
+    source_url: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+    verified: true
+    impact: next_session
+  - date: 2027-04-28
+    type: US_FOMC_DECISION
+    status: SCHEDULED
+    title: FOMC meeting April 27-28, 2027 (statement 2:00 pm ET; tentative until confirmed)
+    source_url: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+    verified: true
+    impact: next_session
+  - date: 2027-06-09
+    type: US_FOMC_DECISION
+    status: SCHEDULED
+    title: FOMC meeting June 8-9, 2027 (statement 2:00 pm ET, with Summary of Economic Projections; tentative until confirmed)
+    source_url: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+    verified: true
+    impact: next_session
+  - date: 2027-07-28
+    type: US_FOMC_DECISION
+    status: SCHEDULED
+    title: FOMC meeting July 27-28, 2027 (statement 2:00 pm ET; tentative until confirmed)
+    source_url: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+    verified: true
+    impact: next_session
+  - date: 2027-09-15
+    type: US_FOMC_DECISION
+    status: SCHEDULED
+    title: FOMC meeting September 14-15, 2027 (statement 2:00 pm ET, with Summary of Economic Projections; tentative until confirmed)
+    source_url: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+    verified: true
+    impact: next_session
+  - date: 2027-10-27
+    type: US_FOMC_DECISION
+    status: SCHEDULED
+    title: FOMC meeting October 26-27, 2027 (statement 2:00 pm ET; tentative until confirmed)
+    source_url: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+    verified: true
+    impact: next_session
+  - date: 2027-12-08
+    type: US_FOMC_DECISION
+    status: SCHEDULED
+    title: FOMC meeting December 7-8, 2027 (statement 2:00 pm ET, with Summary of Economic Projections; tentative until confirmed)
+    source_url: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+    verified: true
+    impact: next_session

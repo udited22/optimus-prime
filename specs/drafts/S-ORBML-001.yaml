@@ -1,0 +1,92 @@
+# H23 DRAFT (docs/research/institutional-intelligence-layer.md §7). RESEARCH: no evidence, no confidence. Param
+# values are pre-registered priors, not fitted numbers. Sources: Lopez de Prado, Advances in Financial Machine
+# Learning (Wiley 2018: triple-barrier labels, meta-labelling, purged k-fold with embargo); Joubert, "Meta-Labeling:
+# Theory and Framework" (JFDS 2022); Bailey & Lopez de Prado, "The Deflated Sharpe Ratio" (JPM 2014).
+# The PRIMARY is S-ORB-002 (H01b) unchanged; this spec only adds a pre-registered veto. Draft only: kept in
+# specs/drafts/ until a library plug-in and an entry-cap row exist. Approximate minimum NAV: as H01b, ~INR 70k-1.1 lakh.
+id: S-ORBML-001
+version: 0.1.0
+status: RESEARCH
+owner_agent: research.intelligence
+created: 2026-10-03
+hypothesis: >
+  Among S-ORB-002 (H01b) signals, those whose meta-label probability is at least 0.55, from an L2 logistic regression
+  (C = 1, no tuning) on ten pre-registered features trained walk-forward on triple-barrier labels with purged 5-fold
+  cross-validation and a 1-day embargo, have positive OOS net expectancy per trade and a higher one than all H01b
+  signals over the same OOS window.
+economic_rationale: >
+  H01b's direction rule may be right only in some conditions (its 2022-2024 pipeline check was negative overall).
+  Meta-labelling separates direction from whether to act: a secondary model learns when the primary's trades reach the
+  profit barrier first, which can raise precision without new direction signals. Purging and an embargo stop
+  overlapping labels leaking across folds; the Deflated Sharpe charges the trials.
+required_data:
+  - {dataset: nifty_index_1m, granularity: 1m, fields: [open, high, low, close], availability: AVAILABLE}
+  - {dataset: nifty_opt_1m_atm_band, granularity: 1m, fields: [open, high, low, close, volume, oi, iv], availability: AVAILABLE}
+  - {dataset: nifty_opt_1m_next_expiry, granularity: 1m, fields: [iv], availability: AVAILABLE}
+  - {dataset: india_vix_1m, granularity: 1m, availability: AVAILABLE}
+  - {dataset: s_orb_002_signal_log, granularity: 1m, fields: [signal_time, direction, entry, exit_reason, r_multiple], availability: UNVERIFIED}  # produced by the backtester
+signal:
+  formula: >
+    primary = S-ORB-002 signal (unchanged); features at the signal minute = [OR width / 20-day ATR, |gap| %, India VIX,
+    VIX 30-min change, IV term slope code1 vs code2, F-GEX-001 G percentile, minutes since 09:15, DTE, previous-day
+    return, K-11 volatility tag]; label = 1 if the triple barrier (+1.5 R premium, the stop, 60-minute vertical) hits the
+    profit barrier first; p = logistic(features); take the primary trade only if p >= p_min
+  params:
+    p_min: {value: 0.55, min: 0.50, max: 0.65, step: 0.05}
+    cv_folds: {value: 5, min: 3, max: 10, step: 1}
+    embargo_days: {value: 1, min: 1, max: 5, step: 1}
+    retrain_months: {value: 1, min: 1, max: 3, step: 1}
+    min_train_signals: {value: 150, min: 100, max: 300, step: 50}
+legs:
+  - {side: BUY, right: SIGNAL}
+eligible_regimes: [TRENDING_UP, TRENDING_DOWN, VOLATILITY_EXPANSION, GAP_REGIME]
+prohibited_regimes: [EVENT_REGIME, LOW_LIQUIDITY, ABNORMAL_MARKET, NO_EDGE]
+invalidation_rules:
+  - kind: PRICE_LEVEL
+    description: "a 5-min close back inside the opening range invalidates the breakout (as H01b)"
+    action: EXIT_POSITION
+  - kind: TIME
+    description: "no 0.4 x OR-width follow-through within 60 minutes of entry (as H01b)"
+    action: EXIT_POSITION
+  - kind: DATA
+    description: "a feature is missing at the signal minute, or the model has fewer than min_train_signals labelled trades: no trade"
+    action: CANCEL_ENTRY
+selection:
+  expiry: "nearest weekly with DTE >= 1"
+  strike: "delta 0.40-0.55 by own IV calc; spread <= 2 ticks"
+entry:
+  trigger: "an S-ORB-002 signal with p >= p_min"
+  window_start: "09:30:00"
+  window_end: "13:00:00"
+  order: {type: LIMIT, price_rule: "mid + 1 tick, capped at max_price", ttl_seconds: 10, max_chase_ticks: 2}
+  max_entries_per_day: 1  # as H01b: one opening range a day
+exit:
+  stop: {method: PREMIUM_PCT, value: 30, order: SL_LIMIT, limit_offset_ticks: 4}
+  profit_taking: "1.5 R or trailing at the 15-min swing"
+  time_exit: "14:30:00"
+  max_holding_minutes: 75
+sizing:
+  method: "fixed 1 lot if risk_at_stop <= risk_budget else NO TRADE (a probability-scaled budget is H27, not this spec)"
+  max_lots: 1
+  risk_at_stop_formula: "(entry - stop_fill_estimate) * lot + round_trip_costs + slippage_allowance"
+expected_frequency: "a fraction of H01b's 1-3 signals/week (prior)"
+expected_slippage: {entry_ticks: 1, exit_ticks: 1, stop_ticks: 2, source: assumed}
+cost_assumptions: {cost_model_version: CM-2026-04-01, brokerage_plan: upstox-options}
+capacity: "high relative to one lot (NIFTY ATM liquidity)"
+failure_modes:
+  - "the primary has no recall in any condition, so there is nothing to select"
+  - "too few labelled signals (a few hundred in five years) for ten features: the model fits noise"
+  - "feature leakage through overlapping labels if purging or the embargo is mis-implemented"
+falsification_criteria:
+  - "OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0"
+  - "OOS expectancy of kept trades is not above that of all H01b signals in the same window (p >= 0.10)"
+  - "Deflated Sharpe (docs/research/validation.md V9) with the full trial count, including every feature set and p_min tried, <= 0.95"
+cost_sensitivity: >
+  As H01b: a round trip of about INR 50-70 is 3-5% of a INR 1,400-2,500 risk at stop. Vetoing trades lowers total cost
+  but not the cost per kept trade, so the kept trades must carry the whole edge after 2x slippage (docs/research/validation.md V10).
+dependencies: {weekly_expiry: true}
+retirement_criteria:
+  - "OOS expectancy CI upper bound < 0"
+  - "live slippage > 2x assumed over 20 trades"
+  - "the model's calibration (predicted vs realised hit rate) is off by more than 10 points over 30 live trades"
+event_certified: false

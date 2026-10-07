@@ -1,0 +1,37 @@
+# Dhan Data API (historical data only; OD-011). NON-SECRET configuration.
+# The access token is NEVER stored here: it arrives at run time as the environment variable DHAN_ACCESS_TOKEN
+# (plus DHAN_CLIENT_ID if an endpoint needs it). Sources: S29 (rate limits), S31 (expired options),
+# S57 (historical/intraday charts), S58 (instrument list), S59 (annexure: enums, error codes), S60 (authentication).
+version = "DHAN-2026-10-03.1"  # 2-Oct .1: 90 s timeout (30-day rolling calls take 2-30 s); 3-Oct .1: SENSEX ids
+api_base = "https://api.dhan.co/v2"
+instrument_list_url = "https://images.dhan.co/api-data/api-scrip-master-detailed.csv"
+allowed_hosts = ["api.dhan.co", "images.dhan.co"]
+
+# Pacing: Dhan allows 5 data requests/s and 100,000/day (S29). We stay below both.
+requests_per_second = 4
+requests_per_day = 90000
+http_timeout_seconds = "90"
+
+# Retries. Rate-limit responses (HTTP 429, DH-904, 805) back off exponentially and honour Retry-After.
+# Server/network errors (5xx, DH-908, DH-909, 800) are retried a few times, then the chunk is marked FAILED.
+retry_rate_limit_max_attempts = 6
+retry_server_max_attempts = 3
+backoff_base_seconds = "1"
+backoff_cap_seconds = "60"
+
+# Window limits per call (S31: expired options up to 30 days; S57: intraday up to 90 days, DH-905 beyond).
+# Verified 2-Oct-2026: the rolling-option toDate is INCLUSIVE (docs say non-inclusive), so jobs send the last day.
+rolling_option_max_window_days = 30
+intraday_max_window_days = 90
+
+# NIFTY identifiers (from the public instrument list, 30-Sep-2026): index security id 13 on IDX_I.
+nifty_index_security_id = "13"
+nifty_strike_step = "50"
+
+# SENSEX identifiers (public scrip master of 2-Oct-2026: "BSE,I,51,...,SENSEX" on IDX_I; SENSEX options on BSE_FNO
+# list UNDERLYING_SECURITY_ID 1, but charts/rollingoption returns data only for securityId 51 with exchangeSegment
+# BSE_FNO: probed 3-Oct-2026 ~22:05 IST, 29..30-Sep-2026 WEEK code 1 ATM CALL -> 770 bars with id 51, 0 with id 1).
+# Option strikes are 100 apart. Weekly SENSEX options have rolling data from the 15-May-2023 relaunch (probes for
+# Oct-2021 and Jun-2022 returned none; 15-May-2023 returned bars from 11:07 IST).
+sensex_index_security_id = "51"
+sensex_strike_step = "100"

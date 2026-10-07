@@ -1,0 +1,81 @@
+# Regime -> strategy map and the portfolio backtest (scripts/regime_portfolio.py). Pre-registered on 3-Oct-2026 before
+# any strategy result on real data was examined (the strategy runs were still computing). Versioned: a change is a new
+# [[regime_map]] block. Every (strategy, regime cell, NAV) combination evaluated is registered as a trial (V9).
+#
+# Data partition: research = research_from..research_to minus every holdout day (configs/validation/holdout.toml).
+# The holdout is read once, at the end, for the shortlisted pairs (V16) and for the final portfolio.
+#
+# Regime cell: the classifier dimensions that PASSED the classifier validation (RV-2026-10-03.1) are the only ones a
+# map may condition on (`cell_dimensions`), so a strategy is never chosen on a label shown to carry no information.
+# Trades on EVENT_REGIME days (no strategy is event-certified, OD-014), on ABNORMAL_MARKET, in warm-up/NO_EDGE, and in
+# a regime the strategy's spec prohibits are never eligible.
+#
+# Walk-forward: expanding training window from research_from; refit at the start of each test window (calendar
+# quarters from first_test_from). A (strategy, cell) pair is SELECTED for the next window when its training trades
+# number >= min_train_trades, their mean net P&L > 0 and the day-block bootstrap `train_ci_level` CI lower bound > 0.
+# The portfolio trades only selected pairs in each test window (out of sample by construction).
+#
+# Per-pair validation (V1-V18, configs/validation/gates.toml): the pair's trades in the walk-forward period
+# (first_test_from..research_to, holdout days excluded) are its OOS trades; trades before first_test_from are in-sample.
+#
+# Portfolio constraints (configs/risk/limits.toml RL-2026-10-02.3 and allocator AL-2026-10-02.1, unchanged): 10 new
+# entries a day system-wide and each spec's own max_entries_per_day (OD-014); one open position at a time; per-trade
+# risk at the stop <= 2% of CURRENT NAV (a trade sized on the run's starting NAV is skipped when NAV has fallen below
+# it); the 4% daily stop (realised) and the 8% weekly freeze stop new entries; a 12.5% drawdown from the high-water mark
+# suspends the book for good (OD-010, latched); 15 minutes of cooldown after a stop-out; the allocator's exclusive
+# groups (one strategy per group per day). Simultaneous candidates: the higher training expectancy (net R) first.
+
+[[regime_map]]
+version = "RM-2026-10-03.1"
+adopted_on = 2026-10-03
+classifier = "RC-2026-10-02.1"
+classifier_criteria = "RV-2026-10-03.1"
+cell_dimensions = ["vol"]          # RC-2026-10-02.1 validation: vol PASSES (VOL_LOW, VOL_HIGH, stability); trend FAILS
+holdout = "HD-2026-10-03.1"
+research_from = 2022-08-29
+research_to = 2026-03-31
+first_test_from = 2023-09-01
+test_window_months = 3
+min_train_trades = 30
+train_ci_level = "0.80"
+bootstrap_iterations = 1000
+seed = 20261003
+navs = ["10000", "100000"]         # Rs 10k (OD-001 canary) and a HYPOTHETICAL Rs 1 lakh
+max_trades_per_day = 10
+per_trade_max_loss_frac = "0.02"
+daily_stop_frac = "0.04"
+weekly_freeze_frac = "0.08"
+dd_suspend_frac = "0.125"
+cooldown_after_stop_min = 15
+exclusive_groups = [["S-ORB-001", "S-FBO-001"], ["S-GAPGO-001", "S-GAPFADE-001"], ["S-VWAPC-001", "S-VWAPMR-001"]]
+
+# RM-2026-10-03.2 (3-Oct-2026, 14:30 IST): RM-2026-10-03.1 plus the four intelligence-layer specs built today (H19
+# S-DAYVOL-001, H20 S-NOISE-001, H21 S-IMOM-001, H22 S-GEXMO-001) and the H23 S-ORBML-001 research overlay (a veto on
+# S-ORB-002 signals; its trades are a subset of S-ORB-002's, hence the new exclusive group). Pre-registered before any
+# result of the new specs existed and before the library results were tabulated (the only strategy numbers seen so
+# far are two 2-month smoke samples of S-VWAPMR-001 and S-FBO-001 from the feed-ordering check). The candidate
+# classifier RC-2026-10-03.1 failed out of sample, so the cell is still the validated vol dimension only.
+[[regime_map]]
+version = "RM-2026-10-03.2"
+adopted_on = 2026-10-03
+classifier = "RC-2026-10-02.1"
+classifier_criteria = "RV-2026-10-03.1"
+cell_dimensions = ["vol"]
+holdout = "HD-2026-10-03.1"
+research_from = 2022-08-29
+research_to = 2026-03-31
+first_test_from = 2023-09-01
+test_window_months = 3
+min_train_trades = 30
+train_ci_level = "0.80"
+bootstrap_iterations = 1000
+seed = 20261003
+navs = ["10000", "100000"]
+max_trades_per_day = 10
+per_trade_max_loss_frac = "0.02"
+daily_stop_frac = "0.04"
+weekly_freeze_frac = "0.08"
+dd_suspend_frac = "0.125"
+cooldown_after_stop_min = 15
+exclusive_groups = [["S-ORB-001", "S-FBO-001"], ["S-GAPGO-001", "S-GAPFADE-001"], ["S-VWAPC-001", "S-VWAPMR-001"],
+                    ["S-ORB-002", "S-ORBML-001"]]

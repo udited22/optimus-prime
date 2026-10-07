@@ -1,0 +1,44 @@
+# Host composition root (ops/host_main.py). Paper / shadow mode only: real-money trading is OFF.
+# No secrets here: credentials come from the environment or the encrypted store (ops/credstore.py).
+config_version = "2026-10-03.1"
+
+[host]
+mode = "replay"              # replay | paper | live (live is locked: see [live_lock])
+feed = "auto"                # auto | upstox | replay. auto = Upstox Feed V3 when the app keys exist, else replay
+state_dir = "/var/lib/project100c"   # journal, backups, reports, shadow signals (a Docker volume in compose)
+nav = "10000"                # SIMULATED capital of the paper book (INR): the ₹10k canary size (OD-001); not a balance
+interval_s = 1.0             # wall-clock seconds between host steps (paper)
+status_port = 8780           # loopback only; the reverse proxy publishes it
+webhook_port = 8781          # loopback only; the Upstox notifier webhook (token delivery)
+backup_keep = 30             # journal backups kept on the host (the off-host copy is the owner's choice)
+max_consecutive_failures = 5 # then exit 70 so the supervisor restarts the process from the journal
+
+[schedule]                   # the trading window itself comes from configs/sessions/trading_window.toml
+token_request = "08:45:00"
+gate_deadline = "09:05:00"   # OD-017: no approved token by 09:05 IST -> no trading today
+end_of_day = "15:35:00"      # backup + daily report
+
+[feed_keys]                  # Upstox instrument keys (UNVERIFIED until the first paper session confirms them)
+index = "NSE_INDEX|Nifty 50"
+vix = "NSE_INDEX|India VIX"
+fut = ""                     # the current-month future's key changes monthly (instrument master); empty = none
+
+[upstox]
+base_url = "https://api.upstox.com"
+feed_mode = "full"
+
+[replay]                     # SIMULATED: seeded synthetic days on an accelerated clock
+seed = 7
+start = "2026-10-05"         # the first trading day on or after this date
+days = 1
+step_s = 15                  # simulated seconds per host step
+pace_s = 0.0                 # real seconds to sleep per step (0 = as fast as possible)
+rehearse_orders = true       # also run the order path (allocator, Governor, kernel, fake broker) on each day
+rehearsal_nav = "1000000"    # HYPOTHETICAL ₹10L for the rehearsal only: at ₹10k the 2% cap declines almost every
+                             # signal, so the order path would never run. Mechanics only, never a result
+hold_after = false           # keep serving the status page after the last day (for a container demo)
+
+[live_lock]                  # live trading needs ALL of these AND a build with live enabled (this build: never)
+unlocked = false             # The owner flips this only after docs/risk/canary-criteria.md is signed and a strategy passed the gates
+owner_signoff = ""           # e.g. "The owner, <date>, docs/risk/canary-criteria.md + go-live checklist"
+checklist_sha256 = ""        # sha256 of docs/go-live-checklist.md as signed

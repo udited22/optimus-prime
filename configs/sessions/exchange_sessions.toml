@@ -1,0 +1,72 @@
+# NSE exchange session times (IST). Versioned by effective date. THIS IS THE EXCHANGE, NOT OUR TRADING WINDOW.
+# Our own (narrower) trading window lives in trading_window.toml and must always sit inside the F&O normal market.
+# Holidays / special sessions are NOT modelled here (backlog D-03).
+
+config_version = "2026-10-01.1"
+
+[[fo]]   # NSE equity derivatives (F&O) segment
+version = "NSE-FO-2021-01-01"
+effective_from = 2021-01-01          # backtest coverage start (not the historical start of these hours)
+effective_to = 2024-09-30
+normal_open = "09:15:00"
+normal_close = "15:30:00"
+verified = true
+sources = ["S45", "S46"]
+notes = "Normal market 09:15-15:30 unchanged until 2-Aug-2026 (NSE/FAOP/74467: 'previously 15:30'). Trade-modification end and closing-price VWAP window are deliberately NOT set for 2021-2024-09 (not sourced). Known disruption: 24-Feb-2021 NSE halted trading ~11:40 and re-opened with an extended session to 17:00 (news reports; UNVERIFIED detail) - bars that day are expected to be abnormal."
+
+[[fo]]
+version = "NSE-FO-2024-10-01"
+effective_from = 2024-10-01          # coverage start for this repo (not the historical start of these hours)
+effective_to = 2026-08-02
+normal_open = "09:15:00"
+normal_close = "15:30:00"
+trade_modification_end = "16:15:00"
+close_price_vwap_start = "15:00:00"
+close_price_vwap_end = "15:30:00"
+verified = true
+sources = ["S45", "S18"]
+notes = "Pre-3-Aug-2026 close 15:30 and VWAP 15:00-15:30 per NSE/FAOP/74467 ('previously 15:30') and ET explainer."
+
+[[fo]]
+version = "NSE-FO-2026-08-03"
+effective_from = 2026-08-03
+normal_open = "09:15:00"
+normal_close = "15:40:00"
+trade_modification_end = "16:15:00"
+close_price_vwap_start = "15:10:00"
+close_price_vwap_end = "15:40:00"
+verified = true
+sources = ["S45", "S46", "S18"]
+notes = "NSE/FAOP/74467 dated 29-May-2026: normal market close 15:40 w.e.f. 3-Aug-2026."
+
+[[cash]]  # NSE equity cash segment
+version = "NSE-CM-2021-01-01"
+effective_from = 2021-01-01
+effective_to = 2024-09-30
+normal_open = "09:15:00"
+normal_close = "15:30:00"
+verified = true
+sources = ["S46"]
+notes = "Normal market 09:15-15:30; no closing auction session before 3-Aug-2026."
+
+[[cash]]
+version = "NSE-CM-2024-10-01"
+effective_from = 2024-10-01
+effective_to = 2026-08-02
+normal_open = "09:15:00"
+normal_close = "15:30:00"
+verified = true
+sources = ["S46"]
+notes = "No closing auction session before 3-Aug-2026."
+
+[[cash]]
+version = "NSE-CM-2026-08-03"
+effective_from = 2026-08-03
+normal_open = "09:15:00"
+normal_close = "15:30:00"
+closing_auction_start = "15:15:00"
+closing_auction_end = "15:35:00"
+closing_auction_verified = false
+verified = true
+sources = ["S46", "S18"]
+notes = "Normal close 15:30 per NSE market-timings page (S46). CAS 15:15-15:35 from ET explainer (secondary) -> closing_auction_verified=false."

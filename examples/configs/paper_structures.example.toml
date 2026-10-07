@@ -1,0 +1,11 @@
+# SYNTHETIC EXAMPLE of a PAPER structure-book config (src/project100c/paper/structures.py). Research and paper scope only:
+# the book has no broker, kernel or Governor path. A real config lives in the private alpha library.
+version = "PS-EXAMPLE-1"
+venue = "PAPER"                     # the only accepted value
+
+# Overnight PAPER holds are refused unless this is true AND a decision reference is recorded below.
+od002_paper_exception = false
+od002_decision_ref = ""
+
+# Structures the book may open (spec id + variant code).
+enabled = ["X-DEMO-SPREAD-001-E", "X-DEMO-STRANGLE-001-O"]

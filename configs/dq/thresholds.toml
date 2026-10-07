@@ -1,0 +1,15 @@
+# Data-quality thresholds (versioned). Initial values are DESIGN DEFAULTS, to be calibrated from our own
+# tick recordings (backlog D-10/D-14). They are conservative: prefer disabling entries to trading on doubt.
+version = "DQ-2026-10-02.1"
+stale_quote_seconds = "5"            # no update (receive time) for > 5 s -> stale
+stale_exchange_ts_seconds = "30"     # exchange timestamp not advancing for > 30 s -> stale
+max_clock_drift_seconds = "2"        # receive_ts - exchange_ts beyond this -> drift
+future_tolerance_seconds = "1"       # exchange_ts ahead of receive_ts by more than this -> impossible
+abnormal_spread_min_ticks = 20
+abnormal_spread_pct_of_mid = "0.25"
+max_missing_candle_fraction = "0.01" # > 1% of expected 1-min bars missing -> BLOCKING
+# OD-015:
+ohlc_rounding_tolerance = "0.001"   # H/L/C inconsistent by <= 0.001 price units = float noise (INFO), not BAD_OHLC;
+                                    # 1/50 of the 0.05 NIFTY option tick; Dhan floats carry ~4e-4 noise
+max_opening_vendor_gap_minutes = 5  # bars missing from the open for <= 5 min while the index has them -> WARNING
+

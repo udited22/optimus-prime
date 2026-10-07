@@ -1,0 +1,20 @@
+# SYNTHETIC EXAMPLE, not a research candidate: arbitrary parameters that exercise the schema and the PAPER book.
+id: X-DEMO-SPREAD-001
+version: 0.1.0
+hypothesis_code: H90
+status: RESEARCH
+scope: RESEARCH_PAPER_OD019
+hypothesis: >
+  DEMO ONLY. An expiry-day call credit spread (sell one strike above the money, buy three strikes above) entered
+  mid-morning and closed mid-afternoon. Used to show an intraday, expiry-day-only, ungated structure.
+leg_sets:
+  ALWAYS:
+    - {side: SELL, right: CE, offset: 1}
+    - {side: BUY, right: CE, offset: 3}
+variants:
+  - {code: E, entry: "10:00:00", exit: "14:30:00", allow_expiry_day_entry: true, expiry_day_only: true}
+gate: NONE
+risk_frac: "0.02"
+max_lots: 1
+falsification:
+  - "DEMO: per-lot mean net P&L 90% bootstrap CI upper bound < 0"

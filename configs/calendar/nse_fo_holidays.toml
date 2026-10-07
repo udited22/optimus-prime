@@ -1,0 +1,799 @@
+# NSE equity-derivatives (F&O) trading calendar. Generated from public sources; see configs/calendar/README.md.
+# verified = true only when >= 2 independent public sources agree. Weekend holidays are not listed (non-trading anyway).
+# 2021-2023: exchange circulars (NSE + BSE lists); settlement holidays for 2021-2023 are NOT listed (informational only).
+# Coverage is explicit: dates in other years raise CalendarCoverageError (never assumed holiday-free).
+
+version = "HOL-2026-10-01.1"
+covered_years = [2021, 2022, 2023, 2024, 2025, 2026]
+# Fixed-date national holidays: applied ONLY in provisional mode for years outside coverage.
+fixed_date_holidays = [[1, 26], [5, 1], [8, 15], [10, 2], [12, 25]]
+
+# ---- 2021-2023 (added 1-Oct-2026 from exchange circulars; see README) ----
+[[day]]
+date = 2021-01-26  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Republic Day"
+sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2021-03-11  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Mahashivratri"
+sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2021-03-29  # Mon
+kind = "TRADING_HOLIDAY"
+description = "Holi"
+sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2021-04-02  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Good Friday"
+sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2021-04-14  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Dr. Baba Saheb Ambedkar Jayanti"
+sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2021-04-21  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Ram Navami"
+sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2021-05-13  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Id-Ul-Fitr (Ramzan Id)"
+sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2021-07-21  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Bakri Id"
+sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2021-08-19  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Muharram"
+sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2021-09-10  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Ganesh Chaturthi"
+sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2021-10-15  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Dussehra"
+sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2021-11-04  # Thu
+kind = "SPECIAL_SESSION"
+description = "Diwali Laxmi Pujan"
+sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular (Muhurat trading noted)", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com) (Muhurat trading noted)"]
+verified = true
+note = "Listed as a trading holiday with an evening Muhurat session (ET, 03-Nov-2021: starts 18:15 IST; timing single-source); not a regular trading day for Project 100C"
+
+[[day]]
+date = 2021-11-05  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Diwali Balipratipada"
+sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2021-11-19  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Gurunanak Jayanti"
+sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2022-01-26  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Republic Day"
+sources = ["NSE/CMTR/50560 (10-Dec-2021) trading holidays 2022 (archives.nseindia.com)", "BSE 2022 trading-holiday list, Equity/Equity Derivatives/SLB, as reproduced by kuvera.in/blog/bse-holidays-in-2022"]
+verified = true
+
+[[day]]
+date = 2022-03-01  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Mahashivratri"
+sources = ["NSE/CMTR/50560 (10-Dec-2021) trading holidays 2022 (archives.nseindia.com)", "BSE 2022 trading-holiday list, Equity/Equity Derivatives/SLB, as reproduced by kuvera.in/blog/bse-holidays-in-2022"]
+verified = true
+
+[[day]]
+date = 2022-03-18  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Holi"
+sources = ["NSE/CMTR/50560 (10-Dec-2021) trading holidays 2022 (archives.nseindia.com)", "BSE 2022 trading-holiday list, Equity/Equity Derivatives/SLB, as reproduced by kuvera.in/blog/bse-holidays-in-2022"]
+verified = true
+
+[[day]]
+date = 2022-04-14  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Dr. Baba Saheb Ambedkar Jayanti / Mahavir Jayanti"
+sources = ["NSE/CMTR/50560 (10-Dec-2021) trading holidays 2022 (archives.nseindia.com)", "BSE 2022 trading-holiday list, Equity/Equity Derivatives/SLB, as reproduced by kuvera.in/blog/bse-holidays-in-2022"]
+verified = true
+
+[[day]]
+date = 2022-04-15  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Good Friday"
+sources = ["NSE/CMTR/50560 (10-Dec-2021) trading holidays 2022 (archives.nseindia.com)", "BSE 2022 trading-holiday list, Equity/Equity Derivatives/SLB, as reproduced by kuvera.in/blog/bse-holidays-in-2022"]
+verified = true
+
+[[day]]
+date = 2022-05-03  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Id-Ul-Fitr (Ramzan Id)"
+sources = ["NSE/CMTR/50560 (10-Dec-2021) trading holidays 2022 (archives.nseindia.com)", "BSE 2022 trading-holiday list, Equity/Equity Derivatives/SLB, as reproduced by kuvera.in/blog/bse-holidays-in-2022"]
+verified = true
+
+[[day]]
+date = 2022-08-09  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Muharram"
+sources = ["NSE/CMTR/50560 (10-Dec-2021) trading holidays 2022 (archives.nseindia.com)", "BSE 2022 trading-holiday list, Equity/Equity Derivatives/SLB, as reproduced by kuvera.in/blog/bse-holidays-in-2022"]
+verified = true
+
+[[day]]
+date = 2022-08-15  # Mon
+kind = "TRADING_HOLIDAY"
+description = "Independence Day"
+sources = ["NSE/CMTR/50560 (10-Dec-2021) trading holidays 2022 (archives.nseindia.com)", "BSE 2022 trading-holiday list, Equity/Equity Derivatives/SLB, as reproduced by kuvera.in/blog/bse-holidays-in-2022"]
+verified = true
+
+[[day]]
+date = 2022-08-31  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Ganesh Chaturthi"
+sources = ["NSE/CMTR/50560 (10-Dec-2021) trading holidays 2022 (archives.nseindia.com)", "BSE 2022 trading-holiday list, Equity/Equity Derivatives/SLB, as reproduced by kuvera.in/blog/bse-holidays-in-2022"]
+verified = true
+
+[[day]]
+date = 2022-10-05  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Dussehra"
+sources = ["NSE/CMTR/50560 (10-Dec-2021) trading holidays 2022 (archives.nseindia.com)", "BSE 2022 trading-holiday list, Equity/Equity Derivatives/SLB, as reproduced by kuvera.in/blog/bse-holidays-in-2022"]
+verified = true
+
+[[day]]
+date = 2022-10-24  # Mon
+kind = "SPECIAL_SESSION"
+description = "Diwali Laxmi Pujan"
+sources = ["NSE/CMTR/50560 (10-Dec-2021) trading holidays 2022 (archives.nseindia.com) (Muhurat trading noted)", "BSE 2022 trading-holiday list, Equity/Equity Derivatives/SLB, as reproduced by kuvera.in/blog/bse-holidays-in-2022 (Muhurat trading noted)"]
+verified = true
+note = "Listed as a trading holiday with an evening Muhurat session (timing not recorded); not a regular trading day for Project 100C"
+
+[[day]]
+date = 2022-10-26  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Diwali Balipratipada"
+sources = ["NSE/CMTR/50560 (10-Dec-2021) trading holidays 2022 (archives.nseindia.com)", "BSE 2022 trading-holiday list, Equity/Equity Derivatives/SLB, as reproduced by kuvera.in/blog/bse-holidays-in-2022"]
+verified = true
+
+[[day]]
+date = 2022-11-08  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Gurunanak Jayanti"
+sources = ["NSE/CMTR/50560 (10-Dec-2021) trading holidays 2022 (archives.nseindia.com)", "BSE 2022 trading-holiday list, Equity/Equity Derivatives/SLB, as reproduced by kuvera.in/blog/bse-holidays-in-2022"]
+verified = true
+
+[[day]]
+date = 2023-01-26  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Republic Day"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2023-03-07  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Holi"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2023-03-30  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Ram Navami"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2023-04-04  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Mahavir Jayanti"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2023-04-07  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Good Friday"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2023-04-14  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Dr. Baba Saheb Ambedkar Jayanti"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2023-05-01  # Mon
+kind = "TRADING_HOLIDAY"
+description = "Maharashtra Day"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2023-06-29  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Bakri Id (Id-Ul-Zuha), moved from 28-Jun-2023"
+sources = ["Zerodha bulletin 353722 (27-Jun-2023): equity/F&O closed 29-Jun-2023, revised from 28-Jun-2023; June F&O contracts expire 28-Jun-2023", "NSE/CD/57298 (Jun-2023), citing Maharashtra GAD notification of 26-Jun-2023, NSE/CD/57295 and BSE 20230627-2: holiday changed to 29-Jun-2023"]
+verified = true
+note = "NSE/FAOP/54759 originally listed 28-Jun-2023; 28-Jun-2023 was a normal trading day and the June expiry"
+
+[[day]]
+date = 2023-08-15  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Independence Day"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2023-09-19  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Ganesh Chaturthi"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2023-10-02  # Mon
+kind = "TRADING_HOLIDAY"
+description = "Mahatma Gandhi Jayanti"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2023-10-24  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Dussehra"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2023-11-12  # Sun
+kind = "SPECIAL_SESSION"
+description = "Diwali Laxmi Pujan (Sunday)"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com) (Muhurat trading noted)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com) (Muhurat trading noted)"]
+verified = true
+note = "Sunday Muhurat session (timing not recorded); not a regular trading day for Project 100C"
+
+[[day]]
+date = 2023-11-14  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Diwali Balipratipada"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2023-11-27  # Mon
+kind = "TRADING_HOLIDAY"
+description = "Gurunanak Jayanti"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+[[day]]
+date = 2023-12-25  # Mon
+kind = "TRADING_HOLIDAY"
+description = "Christmas"
+sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com)"]
+verified = true
+
+# ---- 2024 onward ----
+[[day]]
+date = 2024-01-20  # Sat
+kind = "SPECIAL_SESSION"
+description = "Special Trading"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)"]
+verified = false
+note = "NFO session 09:15-15:30 IST per Upstox; not a regular trading day for Project 100C"
+
+[[day]]
+date = 2024-01-22  # Mon
+kind = "TRADING_HOLIDAY"
+description = "Ram Temple consecration"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/60338 (19-Jan-2024) holiday 22-Jan-2024"]
+verified = true
+
+[[day]]
+date = 2024-01-26  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Republic Day"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror"]
+verified = true
+
+[[day]]
+date = 2024-02-19  # Mon
+kind = "SETTLEMENT_HOLIDAY"
+description = "Chhatrapati Shivaji Maharaj Jayanti"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)"]
+verified = false
+note = "F&O trades normally (informational)"
+
+[[day]]
+date = 2024-03-02  # Sat
+kind = "SPECIAL_SESSION"
+description = "Special DR Trading"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)"]
+verified = false
+note = "NFO session 09:15-12:30 IST per Upstox; not a regular trading day for Project 100C"
+
+[[day]]
+date = 2024-03-08  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Maha Shivratri"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror"]
+verified = true
+
+[[day]]
+date = 2024-03-25  # Mon
+kind = "TRADING_HOLIDAY"
+description = "Holi"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror"]
+verified = true
+
+[[day]]
+date = 2024-03-29  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Good Friday"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror"]
+verified = true
+
+[[day]]
+date = 2024-04-01  # Mon
+kind = "SETTLEMENT_HOLIDAY"
+description = "Annual Bank Closing"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)"]
+verified = false
+note = "F&O trades normally (informational)"
+
+[[day]]
+date = 2024-04-09  # Tue
+kind = "SETTLEMENT_HOLIDAY"
+description = "Gudhi Padwa"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)"]
+verified = false
+note = "F&O trades normally (informational)"
+
+[[day]]
+date = 2024-04-11  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Eid-Ul-Fitr (Ramadan Eid)"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror"]
+verified = true
+
+[[day]]
+date = 2024-04-17  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Ram Navami"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror"]
+verified = true
+
+[[day]]
+date = 2024-05-01  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Maharastra Day"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror"]
+verified = true
+
+[[day]]
+date = 2024-05-18  # Sat
+kind = "SPECIAL_SESSION"
+description = "Special DR Trading(18th May)"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)"]
+verified = false
+note = "NFO session 09:15-12:30 IST per Upstox; not a regular trading day for Project 100C"
+
+[[day]]
+date = 2024-05-20  # Mon
+kind = "TRADING_HOLIDAY"
+description = "General Election(Mumbai Phase)"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/61518 (08-Apr-2024) holiday 20-May-2024 (parliamentary elections)"]
+verified = true
+
+[[day]]
+date = 2024-05-23  # Thu
+kind = "SETTLEMENT_HOLIDAY"
+description = "Buddha Pournima"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)"]
+verified = false
+note = "F&O trades normally (informational)"
+
+[[day]]
+date = 2024-06-17  # Mon
+kind = "TRADING_HOLIDAY"
+description = "Bakri Eid"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror"]
+verified = true
+
+[[day]]
+date = 2024-07-17  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Moharram"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror"]
+verified = true
+
+[[day]]
+date = 2024-08-15  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Independence Day"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror"]
+verified = true
+
+[[day]]
+date = 2024-09-18  # Wed
+kind = "SETTLEMENT_HOLIDAY"
+description = "Id-E-Milad"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)"]
+verified = false
+note = "F&O trades normally (informational)"
+
+[[day]]
+date = 2024-10-02  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Mahatma Gandhi Jayanti"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror"]
+verified = true
+
+[[day]]
+date = 2024-11-01  # Fri
+kind = "SPECIAL_SESSION"
+description = "Diwali Laxmi Pujan"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror (Muhurat trading noted)"]
+verified = true
+note = "NFO session 18:00-19:00 IST per Upstox; not a regular trading day for Project 100C; exact Muhurat timing is from Upstox only"
+
+[[day]]
+date = 2024-11-15  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Guru Nanak Jayanti"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror"]
+verified = true
+
+[[day]]
+date = 2024-11-20  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Maharastra Assembly Elections"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE circular 154/2024 (08-Nov-2024) holiday 20-Nov-2024, via steelcitynettrade mirror; Zerodha Z-Connect"]
+verified = true
+
+[[day]]
+date = 2024-12-25  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Christmas"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror"]
+verified = true
+
+[[day]]
+date = 2025-02-01  # Sat
+kind = "SPECIAL_SESSION"
+description = "Budget Day Session"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)"]
+verified = false
+note = "NFO session 09:15-15:30 IST per Upstox; not a regular trading day for Project 100C"
+
+[[day]]
+date = 2025-02-19  # Wed
+kind = "SETTLEMENT_HOLIDAY"
+description = "Chhatrapati Shivaji Maharaj Jayanti"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)"]
+verified = false
+note = "F&O trades normally (informational)"
+
+[[day]]
+date = 2025-02-26  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Mahashivratri"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org)"]
+verified = true
+
+[[day]]
+date = 2025-03-14  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Holi"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org)"]
+verified = true
+
+[[day]]
+date = 2025-03-31  # Mon
+kind = "TRADING_HOLIDAY"
+description = "Id-Ul-Fitr (Ramadan Eid)"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org)"]
+verified = true
+
+[[day]]
+date = 2025-04-01  # Tue
+kind = "SETTLEMENT_HOLIDAY"
+description = "Annual Bank Closing"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)"]
+verified = false
+note = "F&O trades normally (informational)"
+
+[[day]]
+date = 2025-04-10  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Shri Mahavir Jayanti"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org)"]
+verified = true
+
+[[day]]
+date = 2025-04-14  # Mon
+kind = "TRADING_HOLIDAY"
+description = "Dr. Baba Saheb Ambedkar Jayanti"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org)"]
+verified = true
+
+[[day]]
+date = 2025-04-18  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Good Friday"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org)"]
+verified = true
+
+[[day]]
+date = 2025-05-01  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Maharashtra Day"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org)"]
+verified = true
+
+[[day]]
+date = 2025-05-12  # Mon
+kind = "SETTLEMENT_HOLIDAY"
+description = "Buddha Pournima"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)"]
+verified = false
+note = "F&O trades normally (informational)"
+
+[[day]]
+date = 2025-08-15  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Independence Day"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org)"]
+verified = true
+
+[[day]]
+date = 2025-08-27  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Ganesh Chaturthi"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org)"]
+verified = true
+
+[[day]]
+date = 2025-09-08  # Mon
+kind = "SETTLEMENT_HOLIDAY"
+description = "Id-E-Milad"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)"]
+verified = false
+note = "F&O trades normally (informational)"
+
+[[day]]
+date = 2025-10-02  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Mahatma Gandhi Jayanti/Dussehra"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org)"]
+verified = true
+
+[[day]]
+date = 2025-10-21  # Tue
+kind = "SPECIAL_SESSION"
+description = "Diwali Laxmi Pujan"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org) (Muhurat trading noted)"]
+verified = true
+note = "NFO session 13:45-14:45 IST per Upstox; not a regular trading day for Project 100C; exact Muhurat timing is from Upstox only"
+
+[[day]]
+date = 2025-10-22  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Diwali-Balipratipada"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org)"]
+verified = true
+
+[[day]]
+date = 2025-11-05  # Wed
+kind = "TRADING_HOLIDAY"
+description = "Prakash Gurpurb Sri Guru Nanak Dev"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org)"]
+verified = true
+
+[[day]]
+date = 2025-12-25  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Christmas"
+sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org)"]
+verified = true
+
+[[day]]
+date = 2026-01-15  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Municipal Corporation Election"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "niftyindices.com holiday calendar 2026 (lists 15-Jan-2026 Municipal Corporation Election)"]
+verified = true
+
+[[day]]
+date = 2026-01-26  # Mon
+kind = "TRADING_HOLIDAY"
+description = "Republic Day"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true
+
+[[day]]
+date = 2026-02-01  # Sun
+kind = "SPECIAL_SESSION"
+description = "Budget Day Session"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)"]
+verified = false
+note = "NFO session 09:15-15:30 IST per Upstox; not a regular trading day for Project 100C"
+
+[[day]]
+date = 2026-02-19  # Thu
+kind = "SETTLEMENT_HOLIDAY"
+description = "Chhatrapati Shivaji Maharaj Jayanti"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)"]
+verified = false
+note = "F&O trades normally (informational)"
+
+[[day]]
+date = 2026-03-03  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Holi"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true
+
+[[day]]
+date = 2026-03-19  # Thu
+kind = "SETTLEMENT_HOLIDAY"
+description = "Gudi Padwa"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)"]
+verified = false
+note = "F&O trades normally (informational)"
+
+[[day]]
+date = 2026-03-26  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Ram Navami"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true
+
+[[day]]
+date = 2026-03-31  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Mahavir Jayanti"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true
+
+[[day]]
+date = 2026-04-01  # Wed
+kind = "SETTLEMENT_HOLIDAY"
+description = "Annual Bank Closing"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)"]
+verified = false
+note = "F&O trades normally (informational)"
+
+[[day]]
+date = 2026-04-03  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Good Friday"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true
+
+[[day]]
+date = 2026-04-14  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Dr. Baba Saheb Ambedkar Jayanti"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true
+
+[[day]]
+date = 2026-05-01  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Maharashtra Day"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true
+
+[[day]]
+date = 2026-05-28  # Thu
+kind = "TRADING_HOLIDAY"
+description = "Bakri Id / Eid-ul-Adha"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true
+
+[[day]]
+date = 2026-06-26  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Muharram"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true
+
+[[day]]
+date = 2026-08-26  # Wed
+kind = "SETTLEMENT_HOLIDAY"
+description = "Id-E-Milad"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)"]
+verified = false
+note = "F&O trades normally (informational)"
+
+[[day]]
+date = 2026-09-14  # Mon
+kind = "TRADING_HOLIDAY"
+description = "Ganesh Chaturthi"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true
+
+[[day]]
+date = 2026-10-02  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Gandhi Jayanti"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true
+
+[[day]]
+date = 2026-10-20  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Dussehra"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true
+
+[[day]]
+date = 2026-11-08  # Sun
+kind = "SPECIAL_SESSION"
+description = "Diwali Laxmi Pujan"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times (Muhurat trading noted)"]
+verified = true
+note = "NFO session 18:00-19:10 IST per Upstox; not a regular trading day for Project 100C; exact Muhurat timing is from Upstox only"
+
+[[day]]
+date = 2026-11-10  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Diwali-Balipratipada"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true
+
+[[day]]
+date = 2026-11-24  # Tue
+kind = "TRADING_HOLIDAY"
+description = "Guru Nanak Jayanti"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true
+
+[[day]]
+date = 2026-12-25  # Fri
+kind = "TRADING_HOLIDAY"
+description = "Christmas"
+sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times"]
+verified = true

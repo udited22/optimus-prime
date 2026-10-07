@@ -1,0 +1,19 @@
+# NIFTY option/future expiry rules, versioned by the NOMINAL expiry date.
+# Holiday rule (all versions): if the nominal day is not a trading day, expiry moves to the previous trading day.
+# History: NSE/FAOP/66938 (04-Mar-2025) announced a move to Monday from 04-Apr-2025; it was DEFERRED by
+# NSE/FAOP/67338 (27-Mar-2025) and never took effect, so it has no rule here.
+underlying = "NIFTY"
+
+[[rule]]
+version = "NIFTY-EXP-THU"
+effective_from = 2000-01-01
+effective_to = 2025-08-31
+weekday = 3   # Thursday; monthly = last Thursday of the month
+source = "NSE consolidated circular 61814 ch.1.14 (as referenced by NSE/FAOP/65336 and 66938); NSE/FAOP/68747 'current expiry day'"
+
+[[rule]]
+version = "NIFTY-EXP-TUE"
+effective_from = 2025-09-01
+effective_to = 2099-12-31
+weekday = 1   # Tuesday; monthly = last Tuesday of the month
+source = "NSE/FAOP/68747 (25-Jun-2025): contracts expiring on/after 01-Sep-2025 expire on Tuesday; long-dated realigned 31-Jul-2025 EOD"

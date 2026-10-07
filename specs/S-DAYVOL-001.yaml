@@ -1,0 +1,93 @@
+# H19 (docs/research/institutional-intelligence-layer.md §3). RESEARCH: no evidence, no confidence. Param
+# values are pre-registered priors, not fitted numbers. Sources: Muravyev & Ni (JFE 2020), Bhat, Pandey & Rao
+# (J. Futures Markets 2024, NIFTY), Goyal & Saretto (JFE 2009), Corsi (J. Fin. Econometrics 2009).
+# 0.2.0: sizing applies the existing OD-013 long-straddle allowance (2 lots); nothing else changed.
+# Approximate minimum NAV: 2 legs x ~INR 100 x 65 x 30% stop + ~INR 120 costs ~= INR 4,000 at stop -> ~INR 2 lakh.
+# Promoted from specs/drafts/ on 3-Oct-2026 once its library plug-in (strategies/library/signals_intel.py) and its
+# entry-cap row (docs/research/strategy-hypotheses.md) existed. Still RESEARCH: no evidence, no confidence.
+id: S-DAYVOL-001
+version: 0.2.0
+status: RESEARCH
+owner_agent: research.intelligence
+created: 2026-10-03
+hypothesis: >
+  When a HAR forecast of today's NIFTY open-to-close realised variance (5-min returns; yesterday, 5-day and 22-day
+  open-to-close RV plus the 09:15-09:45 RV) is at least 1.25x the one-session variance implied by the nearest-weekly
+  ATM IV (IV^2/252), a long ATM straddle bought 09:45-11:00 and closed by 14:30 has positive net expectancy, and
+  earns more than the same straddle bought at the same minute on days when the ratio is below 1.
+economic_rationale: >
+  Option prices behave as if volatility were the same day and night while realised volatility is concentrated
+  intraday, so delta-hedged option returns are negative overnight and non-negative intraday (Muravyev & Ni; for NIFTY,
+  Bhat, Pandey & Rao find the sellers' variance risk premium is mainly a reward for overnight risk). A buyer who is
+  always flat by 15:00 avoids the overnight part; buying only when forecast intraday variance exceeds what the price
+  implies (Goyal & Saretto's RV-above-IV effect, with Corsi's HAR forecast) is the long-only use of that fact.
+required_data:
+  - {dataset: nifty_index_1m, granularity: 1m, fields: [open, high, low, close], availability: AVAILABLE}
+  - {dataset: nifty_opt_1m_atm_band, granularity: 1m, fields: [open, high, low, close, volume, iv], availability: AVAILABLE}  # code 1, ATM
+  - {dataset: nifty_opt_1m_next_expiry, granularity: 1m, fields: [iv], availability: AVAILABLE}  # code 2, ATM (term guard)
+  - {dataset: india_vix_1m, granularity: 1m, availability: AVAILABLE}
+signal:
+  formula: >
+    at 09:45 and each minute to 11:00: ratio = HAR_forecast(RV_oc) / (IV_atm_code1^2 / 252); term = per-day variance of
+    code1 ATM IV minus per-day forward variance code1->code2; if ratio >= theta_ratio and term <= term_max -> BUY ATM CE +
+    BUY ATM PE (same strike, same expiry)
+  params:
+    theta_ratio: {value: 1.25, min: 1.0, max: 1.6, step: 0.05}
+    term_max: {value: 0.5, min: 0.0, max: 1.0, step: 0.1}  # guard against a strongly inverted short end (panic pricing)
+    har_lookback_days: {value: 22, min: 15, max: 30, step: 1}
+legs:
+  - {side: BUY, right: CE}
+  - {side: BUY, right: PE}
+eligible_regimes: [VOLATILITY_COMPRESSION, VOLATILITY_NORMAL, VOLATILITY_EXPANSION]
+prohibited_regimes: [EVENT_REGIME, EXPIRY_REGIME, LOW_LIQUIDITY, ABNORMAL_MARKET, NO_EDGE]
+invalidation_rules:
+  - kind: VOLATILITY
+    description: "the realised variance from entry to 12:30 is below half the forecast pro rata: the thesis has failed"
+    action: EXIT_POSITION
+  - kind: REGIME_CHANGE
+    description: "the market turns abnormal (circuit-filter territory)"
+    action: EXIT_POSITION
+    regimes: [ABNORMAL_MARKET]
+  - kind: DATA
+    description: "the index, option or IV bar of a minute is missing: no entry on that minute"
+    action: CANCEL_ENTRY
+selection:
+  expiry: "nearest weekly with DTE >= 1"
+  strike: "ATM for both legs (the same strike); spread <= 2 ticks each"
+entry:
+  trigger: "first minute from 09:45 on which ratio >= theta_ratio and the term guard holds"
+  window_start: "09:45:00"
+  window_end: "11:00:00"
+  order: {type: LIMIT, price_rule: "last option close + 1 tick (mid proxy) per leg, chase capped at max_chase_ticks", ttl_seconds: 60, max_chase_ticks: 2}
+  max_entries_per_day: 1  # one straddle a day; a long straddle (CE+PE, same expiry and strike) counts as ONE entry
+exit:
+  stop: {method: PREMIUM_PCT, value: 30, order: SL_LIMIT, limit_offset_ticks: 4}
+  profit_taking: "1 R on the combined premium"
+  time_exit: "14:30:00"
+  max_holding_minutes: 285
+sizing:
+  method: "1 lot per leg (2 lots concurrent) if the summed risk_at_stop <= the per-trade budget else NO TRADE. OD-013 (2-Oct-2026) already allows a long straddle 2 lots (BUY CE + BUY PE, same strike and expiry, combined risk at the stops <= 2% of NAV): limits RL-2026-10-03.1 lists S-DAYVOL-001 in strategy_max_lots; no new owner decision is needed"
+  max_lots: 1
+  risk_at_stop_formula: "sum over both legs of (entry - stop_limit) * lot + round-trip charges + slippage"
+expected_frequency: "a few days a month (prior)"
+expected_slippage: {entry_ticks: 1, exit_ticks: 1, stop_ticks: 2, source: assumed}
+cost_assumptions: {cost_model_version: CM-2026-04-01, brokerage_plan: upstox-options}
+capacity: "high relative to one lot per leg (NIFTY weekly ATM liquidity)"
+failure_modes:
+  - "the HAR forecast is biased upward after shocks (volatility mean-reverts faster intraday than it forecasts)"
+  - "IV falls after entry (vol crush) and outweighs the realised move"
+  - "per-leg stops turn the straddle into an unintended directional position"
+  - "two legs double the costs and the spread"
+falsification_criteria:
+  - "OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0"
+  - "straddles bought on days with ratio >= theta_ratio do not out-earn straddles bought at the same minute on days with ratio < 1 (p >= 0.10)"
+  - "on the lake (2022-2026) the average 09:45-14:30 delta-hedged ATM straddle return is negative (the premise of Bhat, Pandey & Rao does not hold intraday in our window)"
+cost_sensitivity: >
+  Two legs pay about INR 80 of brokerage plus INR 16-40 statutory charges a round trip and two spreads; with ATM legs
+  near INR 100 (about INR 13,000 of premium per pair) the realised move must cover theta from 09:45 to the exit plus about
+  1-2% of the premium in costs, and the edge must survive 2x slippage (docs/research/validation.md V10).
+dependencies: {weekly_expiry: true}
+retirement_criteria:
+  - "OOS expectancy CI upper bound < 0"
+  - "live slippage > 2x assumed over 20 trades"
+event_certified: false

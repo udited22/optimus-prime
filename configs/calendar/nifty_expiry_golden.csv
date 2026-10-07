@@ -1,0 +1,66 @@
+expiry_date,kind,source_id,note
+2021-01-28,MONTHLY,NSE-FOSETT-20210104,NIFTY FUTIDX expiry in NSE FOSett_prce_04012021.csv
+2021-02-25,MONTHLY,NSE-FOSETT-20210104,NIFTY FUTIDX expiry in NSE FOSett_prce_04012021.csv
+2021-03-25,MONTHLY,NSE-FOSETT-20210104,NIFTY FUTIDX expiry in NSE FOSett_prce_04012021.csv
+2022-04-13,WEEKLY,ZERODHA-BULLETIN-320750,Wednesday: 14-Apr-2022 holiday; bulletin: all weekly F&O contracts expire 13-Apr-2022
+2023-06-28,MONTHLY,ZERODHA-BULLETIN-353722,Wednesday: holiday moved to 29-Jun-2023; bulletin: June F&O expiry revised to 28-Jun-2023
+2024-01-25,MONTHLY,NSE-FOSETT-20240102,NIFTY FUTIDX expiry in NSE FOSett_prce_02012024.csv
+2024-02-29,MONTHLY,NSE-FOSETT-20240102,NIFTY FUTIDX expiry in NSE FOSett_prce_02012024.csv
+2024-03-28,MONTHLY,NSE-FOSETT-20240102,NIFTY FUTIDX expiry in NSE FOSett_prce_02012024.csv
+2024-04-25,MONTHLY,NSE-FAOP-LOT-20240426,April-2024 monthly, last with lot 50 (NSE circular effective 26-Apr-2024; Zerodha/ET/Reuters agree)
+2024-05-02,WEEKLY,NSE-FAOP-LOT-20240426,first weekly with revised lot 25
+2024-05-30,MONTHLY,NSE-FAOP-LOT-20240426,first monthly with revised lot 25
+2024-08-14,WEEKLY,CNBCTV18-20240814,Wednesday: 15-Aug-2024 holiday; weekly expiry for NIFTY and BANKNIFTY
+2024-12-19,WEEKLY,NSE-FAOP-64625,last weekly with lot 25
+2025-01-02,WEEKLY,NSE-FAOP-64625,first weekly with revised lot 75
+2025-01-30,MONTHLY,NSE-FAOP-65336,other indices realigned to NIFTY's unchanged last-Thursday monthly (annexure)
+2025-02-27,MONTHLY,NSE-FAOP-65336,other indices realigned to NIFTY's unchanged last-Thursday monthly (annexure)
+2025-03-06,WEEKLY,NSE-FAOP-66938,existing NIFTY weekly (annexure 'current' column; Monday move deferred by FAOP-67338)
+2025-03-13,WEEKLY,NSE-FAOP-66938,existing NIFTY weekly
+2025-03-20,WEEKLY,NSE-FAOP-66938,existing NIFTY weekly
+2025-03-27,MONTHLY,NSE-FAOP-66938,NIFTY near month
+2025-04-03,WEEKLY,NSE-FAOP-66938,existing NIFTY weekly
+2025-04-09,WEEKLY,NSE-FAOP-66938,Wednesday: 10-Apr-2025 holiday (holiday shift)
+2025-04-17,WEEKLY,NSE-FAOP-66938,existing NIFTY weekly
+2025-04-24,MONTHLY,NSE-FAOP-66938,NIFTY mid month (Thursday retained after deferral)
+2025-04-30,WEEKLY,NSE-FAOP-66938,Wednesday: 01-May-2025 holiday (holiday shift)
+2025-05-29,MONTHLY,NSE-FAOP-66938,NIFTY far month (Thursday retained after deferral)
+2025-06-26,MONTHLY,NSE-FAOP-68747,NIFTY monthly 'no revision'
+2025-07-03,WEEKLY,NSE-FAOP-68747,NIFTY weekly 'no revision'
+2025-07-10,WEEKLY,NSE-FAOP-68747,NIFTY weekly 'no revision'
+2025-07-17,WEEKLY,NSE-FAOP-68747,NIFTY weekly 'no revision'
+2025-07-24,WEEKLY,NSE-FAOP-68747,NIFTY weekly 'no revision'
+2025-07-31,MONTHLY,NSE-FAOP-68747,NIFTY monthly 'no revision'
+2025-08-07,WEEKLY,NSE-FAOP-68747,NIFTY weekly (Thursday)
+2025-08-14,WEEKLY,NSE-FAOP-68747,NIFTY weekly (Thursday)
+2025-08-21,WEEKLY,NSE-FAOP-68747,NIFTY weekly (Thursday)
+2025-08-28,MONTHLY,NSE-FAOP-68747,last Thursday-rule monthly
+2025-09-02,WEEKLY,NSE-FAOP-68747,first Tuesday weekly
+2025-09-09,WEEKLY,NSE-FAOP-68747,Tuesday weekly
+2025-09-16,WEEKLY,NSE-FAOP-68747,Tuesday weekly
+2025-09-23,WEEKLY,NSE-FAOP-68747,Tuesday weekly
+2025-09-30,MONTHLY,NSE-FAOP-68747,quarterly realigned 25-Sep-25 -> 30-Sep-25
+2025-10-28,MONTHLY,NSE-FAOP-68747,new monthly with Tuesday expiry
+2025-12-23,WEEKLY,NSE-FAOP-70616,last weekly with lot 75
+2025-12-30,MONTHLY,NSE-FAOP-68747,quarterly realigned 24-Dec-25 -> 30-Dec-25
+2026-01-06,WEEKLY,NSE-FAOP-70616,first weekly with revised lot 65
+2026-01-27,MONTHLY,NSE-FAOP-70616,first monthly with revised lot 65
+2026-06-30,MONTHLY,NSE-FAOP-68747,half-yearly realigned 25-Jun-26 -> 30-Jun-26
+2026-10-06,WEEKLY,INSTR-UPSTOX+KITE-20260930,listed contract (both vendor files)
+2026-10-13,WEEKLY,INSTR-UPSTOX+KITE-20260930,listed contract
+2026-10-19,WEEKLY,INSTR-UPSTOX+KITE-20260930,Monday: 20-Oct-2026 Dussehra (holiday shift)
+2026-10-27,MONTHLY,INSTR-UPSTOX+KITE-20260930,listed monthly (future exists)
+2026-11-03,WEEKLY,INSTR-UPSTOX+KITE-20260930,listed contract
+2026-11-23,MONTHLY,INSTR-UPSTOX+KITE-20260930,Monday: 24-Nov-2026 Guru Nanak Jayanti (holiday shift)
+2026-12-29,MONTHLY,INSTR-UPSTOX+KITE-20260930;NSE-FAOP-68747,listed; half-yearly realigned 31-Dec-26 -> 29-Dec-26
+2027-03-30,MONTHLY,INSTR-UPSTOX+KITE-20260930,long-dated (year outside holiday coverage: provisional)
+2027-06-29,MONTHLY,INSTR-UPSTOX+KITE-20260930;NSE-FAOP-68747,long-dated (provisional)
+2027-09-28,MONTHLY,INSTR-UPSTOX+KITE-20260930,long-dated (provisional)
+2027-12-28,MONTHLY,INSTR-UPSTOX+KITE-20260930;NSE-FAOP-68747,long-dated (provisional)
+2028-06-27,MONTHLY,INSTR-UPSTOX+KITE-20260930;NSE-FAOP-68747,long-dated (provisional)
+2028-12-26,MONTHLY,INSTR-UPSTOX+KITE-20260930;NSE-FAOP-68747,long-dated (provisional)
+2029-06-26,MONTHLY,INSTR-UPSTOX+KITE-20260930;NSE-FAOP-68747,long-dated (provisional)
+2029-12-24,MONTHLY,INSTR-UPSTOX+KITE-20260930;NSE-FAOP-68747,Monday: 25-Dec-2029 Christmas (provisional holiday shift)
+2030-06-25,MONTHLY,INSTR-UPSTOX+KITE-20260930;NSE-FAOP-68747,long-dated (provisional)
+2030-12-31,MONTHLY,INSTR-UPSTOX+KITE-20260930,long-dated (provisional)
+2031-06-24,MONTHLY,INSTR-UPSTOX+KITE-20260930,long-dated (provisional)

@@ -1,0 +1,115 @@
+{
+  "$defs": {
+    "EventEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "format": "date",
+          "title": "Date",
+          "type": "string"
+        },
+        "impact": {
+          "$ref": "#/$defs/EventImpact",
+          "default": "same_session"
+        },
+        "source_url": {
+          "minLength": 12,
+          "title": "Source Url",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/EventStatus"
+        },
+        "title": {
+          "minLength": 3,
+          "title": "Title",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/EventType"
+        },
+        "verified": {
+          "title": "Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "date",
+        "type",
+        "status",
+        "title",
+        "source_url",
+        "verified"
+      ],
+      "title": "EventEntry",
+      "type": "object"
+    },
+    "EventImpact": {
+      "enum": [
+        "same_session",
+        "next_session"
+      ],
+      "title": "EventImpact",
+      "type": "string"
+    },
+    "EventStatus": {
+      "enum": [
+        "HELD",
+        "SCHEDULED"
+      ],
+      "title": "EventStatus",
+      "type": "string"
+    },
+    "EventType": {
+      "enum": [
+        "RBI_MPC_DECISION",
+        "UNION_BUDGET",
+        "ELECTION_RESULT",
+        "SPECIAL_SESSION",
+        "US_FOMC_DECISION",
+        "US_CPI_RELEASE",
+        "OTHER"
+      ],
+      "title": "EventType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "adopted_on": {
+      "format": "date",
+      "title": "Adopted On",
+      "type": "string"
+    },
+    "checked_on": {
+      "format": "date",
+      "title": "Checked On",
+      "type": "string"
+    },
+    "events": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/EventEntry"
+      },
+      "title": "Events",
+      "type": "array"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "version": {
+      "minLength": 1,
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "version",
+    "adopted_on",
+    "checked_on"
+  ],
+  "title": "EventBook",
+  "type": "object"
+}

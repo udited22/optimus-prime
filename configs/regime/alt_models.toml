@@ -1,0 +1,47 @@
+# Alternative regime models (docs/research/institutional-intelligence-layer.md §10-11), pre-registered on 3-Oct-2026
+# (14:45 IST) before any of their labels existed. Built by scripts/regime_alt_models.py; judged by
+# scripts/regime_portfolio.py. Versioned: a change is a new block, never an edit after seeing results.
+#
+# Both models are judged the same way, out of sample, on research days only (holdout HD-2026-10-03.1 excluded):
+# their label replaces the K-11 vol cell in the pre-registered map RM-2026-10-03.2 (same walk-forward selection rule,
+# same book and caps). PASS needs BOTH, on the walk-forward test windows (2023-09-01..2026-03-31):
+#   (a) the model-gated book's mean net R per trade beats the K-11-vol-gated book's AND the ungated book's, each by a
+#       day-block bootstrap 90% CI lower bound > 0 on the difference of means (unpaired, blocks = trading days);
+#   (b) the label carries information: the mean forward session realised volatility (next session's 1-min
+#       open-to-close RV) differs between the highest and lowest state, 90% CI lower bound > 0.
+# Each model's evaluation is registered as one trial (V9). A model that passes is a CANDIDATE classifier version
+# only; it is read on the holdout once and never replaces K-11 silently.
+
+[[alt_model]]
+id = "F-TERM-001"            # H25: short-dated IV term structure
+version = "TS-2026-10-03.1"
+kind = "term_tercile"
+# slope = per-day forward variance between the code-1 and code-2 ATM expiries / code-1 per-day variance - 1, from the
+# scripts/feature_gex.py ATM IV snapshot at 09:30 (bar end): fwd = (iv2^2*T2 - iv1^2*T1)/(T2 - T1), front = iv1^2,
+# T1 = calendar days to the code-1 expiry + 6/24 (the session left after 09:30), T2 = T1 + 7.
+# Label for the whole session (trades signalled at or after 09:30; earlier ones use the previous session's label):
+# its tercile against the previous `lookback` research sessions' slopes (at least `min_history`).
+snapshot = "0930"
+lookback = 250
+min_history = 60
+labels = ["TERM_LOW", "TERM_MID", "TERM_HIGH"]   # LOW = flat or inverted front (stress), HIGH = steep (calm)
+
+[[alt_model]]
+id = "F-HMMREG-001"          # H26: daily Gaussian HMM
+version = "HMM-2026-10-03.1"
+kind = "gaussian_hmm"
+states = 3
+# Observation for session t (all known at t's close): log of 1-min open-to-close realised vol, |overnight gap| %,
+# India VIX close-to-close change, the 13:00 IV term slope (as above, T1 = DTE + 2.5/24) and the F-GEX-001 G rank.
+# Standardised on the training sample; diagonal covariances (variance floor 1e-3); Baum-Welch from a deterministic
+# start (states seeded by log-RV terciles), at most 200 iterations, tolerance 1e-6. Refit at the start of every month
+# on research sessions only (holdout sessions dropped from the training sequence); the label for session t+1 is the
+# argmax FILTERED (never smoothed) probability after session t. States ordered by their mean log RV:
+# HMM_CALM < HMM_MID < HMM_TURBULENT. The first fit needs `min_train_sessions`; sessions before it are labelled by
+# the first model (training-period labels only: they feed the map's first training window, never a test window).
+features = ["log_rv_oc", "abs_gap_pct", "vix_change", "term_slope_1300", "gex_rank"]
+min_train_sessions = 250
+max_iter = 200
+tol = "1e-6"
+var_floor = "1e-3"
+labels = ["HMM_CALM", "HMM_MID", "HMM_TURBULENT"]

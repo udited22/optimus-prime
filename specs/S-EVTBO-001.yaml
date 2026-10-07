@@ -1,0 +1,135 @@
+# S-EVTBO-001 (docs/research/strategy-hypotheses.md strategy library). RESEARCH: no evidence, no confidence. Param values are pre-registered
+# priors, not fitted numbers. Every number here is ASSUMED until validated on real data.
+id: S-EVTBO-001
+version: 0.1.0
+status: RESEARCH
+owner_agent: research.library
+created: '2026-10-02'
+hypothesis: On a listed event day (RBI MPC, Union Budget, election results), a close beyond the range of the 30 minutes
+  before the announcement keeps going in that direction for at least 1.5 R more often than it reverses.
+economic_rationale: Scheduled announcements resolve uncertainty in one direction; positioning that waited for the event
+  executes after it, so the first decisive break tends to carry.
+required_data:
+- dataset: nifty_index_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  availability: UNVERIFIED
+- dataset: nifty_opt_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  - volume
+  availability: UNVERIFIED
+- dataset: india_vix_1m
+  granularity: 1m
+  availability: UNVERIFIED
+- dataset: event_calendar
+  granularity: 1d
+  availability: UNVERIFIED
+  substitute: 'none: the strategy cannot run without verified event dates and times'
+signal:
+  formula: 'event day; box = [event_minute - pre_minutes, event_minute); after event_minute: close > box high + buffer ->
+    BUY CE; < box low - buffer -> BUY PE'
+  params:
+    event_minute:
+      value: 45
+      min: 15
+      max: 300
+      step: 15
+    pre_minutes:
+      value: 30
+      min: 15
+      max: 45
+      step: 15
+    buffer_pct:
+      value: 0.05
+      min: 0.0
+      max: 0.2
+      step: 0.05
+legs:
+- side: BUY
+  right: SIGNAL
+eligible_regimes:
+- EVENT_REGIME
+prohibited_regimes:
+- LOW_LIQUIDITY
+- ABNORMAL_MARKET
+- NO_EDGE
+required_regimes:
+- EVENT_REGIME
+invalidation_rules:
+- kind: PRICE_LEVEL
+  description: a close back inside the pre-event range
+  action: EXIT_POSITION
+- kind: REGIME_CHANGE
+  description: the market turns abnormal
+  action: EXIT_POSITION
+  regimes:
+  - ABNORMAL_MARKET
+- kind: TIME
+  description: no follow-through within the 45-minute maximum hold
+  action: EXIT_POSITION
+- kind: DATA
+  description: 'the index or option bar of a minute is missing: no entry on that minute'
+  action: CANCEL_ENTRY
+selection:
+  expiry: nearest weekly with DTE >= 1
+  strike: ATM (nearest the index); delta band not implemented
+entry:
+  trigger: first decisive break after the announcement minute
+  window_start: 09:30:00
+  window_end: '13:30:00'
+  order:
+    type: LIMIT
+    price_rule: last option close + 1 tick (mid proxy), chase capped at first limit + max_chase_ticks
+    ttl_seconds: 60
+    max_chase_ticks: 2
+  max_entries_per_day: 1  # OD-014 style default (docs/research/strategy-hypotheses.md entry caps): one event a day (and it needs event certification, which no spec has)
+exit:
+  stop:
+    method: PREMIUM_PCT
+    value: 30
+    order: SL_LIMIT
+    limit_offset_ticks: 4
+  profit_taking: 1.5 R
+  time_exit: '14:30:00'
+  max_holding_minutes: 45
+sizing:
+  method: 1 lot per leg if the summed risk_at_stop <= the per-trade budget (2% NAV) else NO TRADE
+  max_lots: 1
+  risk_at_stop_formula: sum over legs of (entry - stop_limit) * lot + round-trip charges + (entry+stop slippage ticks) *
+    tick * lot
+expected_frequency: about 10-14 event days a year
+expected_slippage:
+  entry_ticks: 1
+  exit_ticks: 1
+  stop_ticks: 2
+  source: assumed
+cost_assumptions:
+  cost_model_version: CM-2026-04-01
+  brokerage_plan: upstox-options
+capacity: high relative to one lot (NIFTY weekly ATM liquidity)
+failure_modes:
+- 'whipsaw: the first break reverses once the statement is read in full'
+- spreads blow out at the announcement
+- the Governor requires event_certified on event days (docs/risk/risk-engine.md)
+falsification_criteria:
+- OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0
+- post-announcement breaks do not continue more often than breaks of a same-sized box on non-event days
+cost_sensitivity: Event-day IV is high (ATM INR 120-250), so the 30% stop risks INR 2,300-4,900 per lot; costs are small
+  relative to that, but spreads at the announcement can be 5-10 ticks, which matters more than charges.
+dependencies:
+  weekly_expiry: true
+retirement_criteria:
+- OOS expectancy CI upper bound < 0
+- live slippage > 2x assumed over 20 trades
+# Event days (OD-014 default, 2-Oct-2026): NOT certified, so no entries on an EVENT_REGIME day. Setting true needs
+# an event_certification record from validation/event_cert.py (VALIDATED on historical event-day trades, REAL data).
+event_certified: false

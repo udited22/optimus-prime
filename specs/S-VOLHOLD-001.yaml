@@ -1,0 +1,76 @@
+# H33. RESEARCH: no evidence, no confidence. Param values are
+# pre-registered priors, not fitted numbers, written before the spec ran on any data (3-Oct-2026). Two-leg long ATM
+# straddle under OD-013. 'Longer hold' = longer INTRADAY hold (flat by 15:00, OD-002); an overnight variant is BLOCKED.
+id: S-VOLHOLD-001
+version: 0.1.0
+status: RESEARCH
+owner_agent: research.volatility
+created: 2026-10-03
+hypothesis: >
+  On a high-forecast-volatility day (high forecast volatility = ANY of: K-11 v0 VOLATILITY_EXPANSION at the decision bar, H25 F-TERM-001 TERM_LOW (known from 09:30), H26 F-HMMREG-001 HMM_TURBULENT (known pre-open; only from its first out-of-sample fit, Mar-2024)), a long ATM straddle of the nearest weekly (DTE >= 1) bought on the first bar
+  from 09:31 to 09:45 on which a label holds and held toward 14:45 with the widest stop that fits the 2% budget, has
+  positive net expectancy per trade (more realised movement than the premium paid for the session).
+economic_rationale: >
+  If the labels' extra realised volatility is not fully priced at the open, holding the straddle most of the session
+  collects more of it than a short hold; intraday-only holding avoids the overnight variance premium sellers earn.
+required_data:
+  - {dataset: nifty_index_1m, granularity: 1m, fields: [open, high, low, close], availability: AVAILABLE}
+  - {dataset: nifty_opt_1m_atm_band, granularity: 1m, fields: [open, high, low, close, volume], availability: AVAILABLE}
+  - {dataset: india_vix_1m, granularity: 1m, availability: AVAILABLE}
+  - {dataset: regime_alt_labels_daily, granularity: 1d, fields: [h25_term_tercile, h26_hmm_state], availability: AVAILABLE}  # scripts/vol_features.py from the H25/H26 label files (point in time)
+signal:
+  formula: >
+    09:31-09:45, once a day, not on expiry days: the first bar with high forecast volatility -> BUY ATM CE + BUY ATM PE
+    (same strike and expiry); premium-aware per-leg stop (spec % down to budget_stop_min_pct) else NO TRADE
+  params:
+    budget_stop_min_pct: {value: 20, min: 10, max: 30, step: 5}
+legs:
+  - {side: BUY, right: CE}
+  - {side: BUY, right: PE}
+eligible_regimes: [VOLATILITY_COMPRESSION, VOLATILITY_NORMAL, VOLATILITY_EXPANSION]
+prohibited_regimes: [EVENT_REGIME, EXPIRY_REGIME, LOW_LIQUIDITY, ABNORMAL_MARKET, NO_EDGE]
+invalidation_rules:
+  - kind: REGIME_CHANGE
+    description: "the market turns abnormal"
+    action: EXIT_POSITION
+    regimes: [ABNORMAL_MARKET]
+  - kind: DATA
+    description: "the index or option bar of a minute is missing: no entry on that minute"
+    action: CANCEL_ENTRY
+selection:
+  expiry: "nearest weekly with DTE >= 1"
+  strike: "ATM for both legs (the same strike)"
+entry:
+  trigger: "first bar from 09:31 on which a high-volatility label holds"
+  window_start: "09:31:00"
+  window_end: "09:45:00"
+  order: {type: LIMIT, price_rule: "last option close + 1 tick (mid proxy) per leg, chase capped at max_chase_ticks", ttl_seconds: 60, max_chase_ticks: 2}
+  max_entries_per_day: 1  # one straddle a day (ONE entry)
+exit:
+  stop: {method: PREMIUM_PCT, value: 50, order: SL_LIMIT, limit_offset_ticks: 4}  # the widest premium-aware stop
+  profit_taking: "none: held to the 14:45 time exit (the engine flattens from 14:50)"
+  time_exit: "14:45:00"
+  max_holding_minutes: 315
+sizing:
+  method: "1 lot per leg (2 lots concurrent, OD-013 long straddle) with the premium-aware stop; NO TRADE if even budget_stop_min_pct does not fit 2% of NAV"
+  max_lots: 1
+  risk_at_stop_formula: "sum over both legs of (entry - stop_limit) * lot + round-trip charges + slippage"
+expected_frequency: "several days a month at INR 1 lakh when the premium fits; about none at INR 10k"
+capacity: "high relative to one lot per leg"
+failure_modes:
+  - "the label's volatility is already in the 09:31 price (no edge for a buyer)"
+  - "theta over five hours exceeds the realised move on most days"
+  - "the premium-aware stop is hit by noise before the move"
+falsification_criteria:
+  - "OOS net expectancy per trade (R) 90% day-block bootstrap CI upper bound < 0"
+  - "fewer than 30 walk-forward trades at INR 1 lakh: untestable, reported as such"
+cost_sensitivity: >
+  Two legs, one round trip a day: about INR 120-160 of charges plus two spreads; small next to a five-hour straddle's
+  theta, which is the real cost. The edge must survive 2x slippage (V10).
+expected_slippage: {entry_ticks: 1, exit_ticks: 1, stop_ticks: 2, source: assumed}
+cost_assumptions: {cost_model_version: CM-2026-04-01, brokerage_plan: upstox-options}
+dependencies: {weekly_expiry: true}
+retirement_criteria:
+  - "OOS expectancy CI upper bound < 0"
+  - "live slippage > 2x assumed over 20 trades"
+event_certified: false

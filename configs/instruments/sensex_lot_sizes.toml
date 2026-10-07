@@ -1,0 +1,27 @@
+# SENSEX F&O market-lot history (BSE), same model and resolution rules as nifty_lot_sizes.toml.
+# Coverage starts at the 15-May-2023 relaunch (BSE 20230327-65: lot 15 -> 10, Thursday -> Friday expiry).
+underlying = "SENSEX"
+version = "LOT-SENSEX-2026-10-03.1"
+coverage_from_expiry = 2023-05-19
+known_through_trade_date = 2026-10-02   # Dhan public scrip master of 2-Oct-2026: SENSEX options (BSE_FNO) lot 20
+base_lot = 10
+base_sources = ["BSE notice 20230327-65 (27-Mar-2023) https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20230327-65 : lot 15 -> 10 w.e.f. 15-May-2023"]
+
+[[revision]]
+id = "BSE-20241021-13"
+old_lot = 10
+new_lot = 20
+effective_trade_date = 2024-11-25   # new weekly contracts generated EOD 22-Nov-2024 carry the new lot
+last_old_weekly = 2025-01-03        # 'weekly contracts up to January 3, 2025 shall retain their current market lot'
+first_new_weekly = 2025-01-07       # the 10-Jan-2025 weekly, moved to Tuesday 7-Jan-2025 by BSE 20241128-70
+last_old_monthly = 2025-01-28       # Jan-2025 monthly keeps lot 10 (31-Jan moved to Tuesday 28-Jan by 20241128-70)
+first_new_monthly = 2025-02-25      # first monthly generated after the Nov-2024 monthly expiry
+carryover_cycles = ["MONTHLY"]
+carryover_min_expiry = 2025-03-01   # long-dated (quarterly / half-yearly) contracts
+carryover_until_eod = 2024-12-27    # 'On December 27, 2024, End of Day, the market lot for all long-dated ... shall change'
+verified = true
+sources = [
+    "BSE notice 20241021-13 (21-Oct-2024) https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20241021-13",
+    "Zerodha Z-Connect 22-Oct-2024 https://zerodha.com/z-connect/updates/revision-in-lot-size-for-bse-index-fo-contracts ; Angel One announcement https://www.angelone.in/announcements/market/revision-in-market-lot-for-index-derivatives-contracts (SENSEX 10 -> 20)",
+]
+notes = "Later SEBI periodic revisions (BSE, Apr-2025 and Sep/Oct-2025 cycles) left SENSEX at 20 per secondary summaries; the 2-Oct-2026 Dhan master shows 20 for every listed SENSEX option. No official BSE notice for those cycles was read here."

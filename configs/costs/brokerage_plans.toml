@@ -1,0 +1,68 @@
+# Brokerage plans for NSE index options. Versioned; verified = false plans are refused unless explicitly allowed.
+# kind: "flat_per_order" (amount per executed order), "zero", "pct_with_cap" (min(rate * turnover, cap) per order).
+# exercise_brokerage: per-exercise charge; omitted = unknown -> pricing an exercise raises CostModelError.
+
+config_version = "2026-10-01.1"
+# Owner decision OD-004 (30-Sep-2026): Upstox is the live execution broker.
+default_live_plan = "upstox-options"
+
+[[plan]]
+plan_id = "zerodha-kite-options"
+kind = "flat_per_order"
+amount = "20"
+verified = true
+verified_on = 2026-09-30
+sources = ["S16"]
+
+[[plan]]
+plan_id = "upstox-options"
+kind = "flat_per_order"
+amount = "20"
+verified = true
+verified_on = 2026-09-30
+sources = ["S28"]
+notes = "Rs 10 promotional rate ended 30-Sep-2026; Rs 20 standard."
+
+[[plan]]
+plan_id = "upstox-plus-options"
+kind = "flat_per_order"
+amount = "30"
+verified = true
+verified_on = 2026-10-01
+sources = ["S73", "S74"]
+notes = "Upstox Plus (optional; economics line 'upstox-plus'): no subscription fee today (free to activate; Upstox will notify if it becomes chargeable), but equity-options brokerage rises to Rs 30 per executed order from Rs 20."
+
+[[plan]]
+plan_id = "kotak-neo-trade-api"
+kind = "zero"
+verified = true
+verified_on = 2026-09-30
+sources = ["S33", "S34"]
+notes = "Rs 0 on orders routed via Kotak Neo Trade API; maturity of the API itself is unproven."
+
+[[plan]]
+plan_id = "kotak-neo-trade-free-non-api"
+kind = "flat_per_order"
+amount = "10"
+verified = true
+verified_on = 2026-09-30
+sources = ["S34"]
+
+[[plan]]
+plan_id = "design-flat-20"
+kind = "flat_per_order"
+amount = "20"
+verified = true
+verified_on = 2026-09-30
+sources = []
+notes = "Generic Rs 20/order used in the design-pack feasibility tables (01 §A2)."
+
+[[plan]]
+plan_id = "design-zero"
+kind = "zero"
+verified = true
+verified_on = 2026-09-30
+sources = []
+notes = "Generic Rs 0 brokerage used in the design-pack feasibility tables (01 §A2)."
+
+# Dhan / FYERS / Angel One F&O brokerage: NOT included - UNVERIFIED on 30-Sep-2026 (see docs/engineering/sources.md).

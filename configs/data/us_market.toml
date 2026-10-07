@@ -1,0 +1,43 @@
+# US market data (DATA ONLY). NON-SECRET configuration. Research: docs/research/us-market-data-sources.md.
+# No-key sources (all checked from the box on 3-Oct-2026 ~22:30 IST):
+#   Yahoo Finance chart endpoint (the one yfinance uses; UNOFFICIAL, Yahoo's terms apply: personal research only,
+#   no redistribution; https://legal.yahoo.com/us/en/yahoo/terms/otos/index.html). Daily bars from each listing's
+#   first trade date with split/dividend events; 1-minute bars only for the last 30 days, at most 8 days per request
+#   (the endpoint's own 422 messages: "Only 8 days worth of 1m granularity data are allowed to be fetched per
+#   request", "The requested range must be within the last 30 days").
+#   Cboe index history CSVs (https://www.cboe.com/tradable_products/vix/vix_historical_data; the cdn.cboe.com links
+#   redirect to cdn-api.cboe.com, used directly so the host allowlist stays exact).
+#   S&P 500 current constituents: the Open Knowledge "s-and-p-500-companies" data package (built from Wikipedia;
+#   https://github.com/datasets/s-and-p-500-companies). CURRENT members only: survivorship bias.
+# Keyed source made ready (free key): Alpaca Market Data API v2 (https://docs.alpaca.markets/docs/about-market-data-api).
+version = "US-MKT-2026-10-03.1"
+yahoo_chart_base = "https://query1.finance.yahoo.com/v8/finance/chart"
+cboe_base = "https://cdn-api.cboe.com/api/global/us_indices/daily_prices"
+constituents_url = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/main/data/constituents.csv"
+alpaca_data_base = "https://data.alpaca.markets"
+allowed_hosts = ["query1.finance.yahoo.com", "cdn-api.cboe.com", "raw.githubusercontent.com", "data.alpaca.markets"]
+
+# Politeness. Yahoo publishes no limit for this unofficial endpoint: 1 request/second and a daily cap.
+# Alpaca Basic (free) allows 200 historical calls/minute; we stay at 3/second.
+requests_per_second = 1
+requests_per_day = 20000
+alpaca_requests_per_second = 3
+http_timeout_seconds = "60"
+retry_server_max_attempts = 4
+retry_rate_limit_max_attempts = 6
+backoff_base_seconds = "5"
+backoff_cap_seconds = "300"
+
+# 1-minute window (Yahoo): fetch completed NYSE sessions inside the last `minute_lookback_days` calendar days, in
+# requests of at most `minute_window_days` days. Re-running later extends the stored history (days already DONE
+# are never re-fetched), so a weekly run keeps an unbroken 1-minute archive going forward.
+minute_lookback_days = 29
+minute_window_days = 7
+# A session missing more than this fraction of its regular-session minutes is flagged COVERAGE_GAP (NIFTY rule: 1%).
+max_missing_fraction = "0.01"
+
+# Always fetched alongside the constituents. Yahoo index symbols start with '^'.
+etfs = ["SPY", "QQQ"]
+indices = ["^GSPC", "^NDX"]
+reference_symbol = "SPY"   # its daily dates are the cross-check for every other symbol's daily dates
+cboe_series = ["VIX", "VIX9D", "VIX3M", "VVIX", "SKEW"]

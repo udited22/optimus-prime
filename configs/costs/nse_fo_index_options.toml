@@ -1,0 +1,126 @@
+# Statutory + exchange charges for NSE index OPTIONS (premium-based). Versioned by effective date.
+# All rates are fractions of premium turnover unless stated. Values are strings -> parsed as Decimal (no float error).
+# Brokerage is NOT here; see brokerage_plans.toml.
+# A schedule with verified = false is refused unless the caller passes allow_unverified=True.
+
+book_id = "NSE-FO-IDXOPT"
+currency = "INR"
+config_version = "2026-10-02.1"
+
+# ---- Historical schedules, verified 2-Oct-2026 against OFFICIAL sources only (see each entry's sources) ----
+# Components and their official sources over the 5-year history (Oct-2021 .. today):
+#   STT (Finance Act 2004 s.98, as amended): NSE STT circulars NSE/FATAX/56235 (1-Apr-2023), NSE/FATAX/63809 (9-Sep-2024),
+#       NSE/FATAX/73524 (31-Mar-2026); Finance (No.2) Act 2024 (Gazette, 16-Aug-2024).
+#   NSE transaction charges + IPFT: NSE/FA/46730 (18-Dec-2020, eff. 1-Jan-2021), NSE/FA/56129 (24-Mar-2023, eff. 1-Apr-2023),
+#       NSE/FA/64232 (27-Sep-2024, eff. 1-Oct-2024), NSE/FA/73061 (27-Feb-2026, eff. 1-Mar-2026).
+#       Before 1-Oct-2024 NSE billed MEMBERS by monthly-turnover slab; the client rate used here is the one Upstox (the
+#       OD-004 broker) published for its clients (Upstox announcement 3-Apr-2023: Rs 53 -> Rs 50 per lakh of premium),
+#       which equals NSE's first incremental slab. Other brokers may have passed through a different rate.
+#   SEBI turnover fee Rs 10/crore (0.00010%, options on premium): SEBI/L.A.D.-N.R.O./G.N./2019/03 (22-Mar-2019), in force
+#       throughout; no later change found.
+#   Stamp duty 0.003% of premium, buyer: Indian Stamp Act 1899 as amended by Finance Act 2019, in force 1-Jul-2020
+#       (SEBI FAQ on the Stamp Act amendments, Jun-2020); no later change found.
+#   GST 18% (CGST 9% + SGST/UTGST 9%) on brokerage, exchange charges and SEBI fee: CBIC Notification 11/2017-Central Tax
+#       (Rate), heading 9971; unchanged by the Sep-2025 rationalisation for broking services.
+#   Brokerage is NOT date-versioned here (brokerage_plans.toml): Upstox options brokerage is a flat Rs 20 per executed order
+#       (upstox.com/brokerage-charges; the 3-Apr-2023 announcement states 'no changes in pricing from Upstox'), and
+#       backtests use today's plan, which is not below any published historical Upstox options rate.
+# The schedule list starts at 1-Oct-2021 (the start of the Dhan history), not at a rate change.
+
+[[schedule]]
+version = "CM-2021-10-01"
+effective_from = 2021-10-01         # coverage start; these rates were already in force (NSE txn since 1-Jan-2021)
+effective_to = 2023-03-31
+stt_sell_rate = "0.0005"            # 0.05% of premium, seller ('upto March 31, 2023 - 0.05%', NSE/FATAX/56235)
+stt_exercise_rate = "0.00125"       # 0.125% of intrinsic value, purchaser (NSE/FATAX/56235: no change)
+exchange_txn_rate = "0.00053"       # Rs 53 per lakh of premium (NSE/FA/46730 slab > Rs 3 cr; Upstox client 'old rate 53')
+sebi_fee_per_crore = "10"
+stamp_buy_rate = "0.00003"
+gst_rate = "0.18"
+verified = true
+verified_on = 2026-10-02
+notes = "NSE IPFT contribution was Rs 0.01/crore (NSE/FA/56129: 'from existing Rs.0.01 per crore'), negligible and not added."
+sources = [
+    "NSE/FATAX/56235 (1-Apr-2023) https://archives.nseindia.com/content/circulars/FATAX56235.pdf",
+    "NSE/FA/46730 (18-Dec-2020) https://archives.nseindia.com/content/circulars/FA46730.pdf",
+    "NSE/FA/56129 (24-Mar-2023) https://archives.nseindia.com/content/circulars/FA56129.pdf",
+    "Upstox announcement (3-Apr-2023) https://upstox.com/announcements/updates/nse-transaction-charges-and-stt-from-1st-april-2023/",
+    "SEBI/L.A.D.-N.R.O./G.N./2019/03 (22-Mar-2019), SEBI board memorandum https://www.sebi.gov.in/sebi_data/meetingfiles/mar-2019/1553244864312_1.pdf ; exchange notice reproducing it https://www.cse-india.com/upload/cse_notice/REVISED_SEBI_TURNOVER_FEES.htm",
+    "SEBI FAQ on Indian Stamp Act amendments (Jun-2020) https://www.sebi.gov.in/sebi_data/faqfiles/jun-2020/1593534237938.pdf",
+    "CBIC Notification 11/2017-Central Tax (Rate) (28-Jun-2017) https://cbic-gst.gov.in/hindi/pdf/central-tax-rate/Notification11-CGST.pdf",
+]
+
+[[schedule]]
+version = "CM-2023-04-01"
+effective_from = 2023-04-01
+effective_to = 2024-09-30
+stt_sell_rate = "0.000625"          # 0.0625% (Finance Act 2023; NSE/FATAX/56235 w.e.f. 1-Apr-2023; '.. upto September 30, 2024 - 0.0625%', NSE/FATAX/63809)
+stt_exercise_rate = "0.00125"
+exchange_txn_rate = "0.0005"        # Rs 50 per lakh of premium (NSE/FA/56129 slab > Rs 3 cr; Upstox client 'new rate 50')
+sebi_fee_per_crore = "10"
+stamp_buy_rate = "0.00003"
+gst_rate = "0.18"
+verified = true
+verified_on = 2026-10-02
+notes = "NSE/FA/56129 also raised the member IPFT contribution to Rs 50/crore of premium from 1-Apr-2023; Upstox's published client table lists only the Rs 50/lakh transaction charge, so IPFT (0.0005%) is not added before the true-to-label regime."
+sources = [
+    "NSE/FATAX/56235 (1-Apr-2023) https://archives.nseindia.com/content/circulars/FATAX56235.pdf",
+    "NSE/FATAX/63809 (9-Sep-2024) https://nsearchives.nseindia.com/content/circulars/FATAX63809.pdf",
+    "NSE/FA/56129 (24-Mar-2023) https://archives.nseindia.com/content/circulars/FA56129.pdf",
+    "Upstox announcement (3-Apr-2023) https://upstox.com/announcements/updates/nse-transaction-charges-and-stt-from-1st-april-2023/",
+    "SEBI/L.A.D.-N.R.O./G.N./2019/03 (22-Mar-2019) https://www.sebi.gov.in/sebi_data/meetingfiles/mar-2019/1553244864312_1.pdf",
+    "SEBI FAQ on Indian Stamp Act amendments (Jun-2020) https://www.sebi.gov.in/sebi_data/faqfiles/jun-2020/1593534237938.pdf",
+    "CBIC Notification 11/2017-Central Tax (Rate) https://cbic-gst.gov.in/hindi/pdf/central-tax-rate/Notification11-CGST.pdf",
+]
+
+[[schedule]]
+version = "CM-2024-10-01"
+effective_from = 2024-10-01
+effective_to = 2026-02-28
+stt_sell_rate = "0.0010"            # 0.10% of premium, seller (Finance (No.2) Act 2024; NSE/FATAX/63809 w.e.f. 1-Oct-2024)
+stt_exercise_rate = "0.00125"       # 0.125% (NSE/FATAX/63809: no change; NSE/FATAX/73524: 'upto March 31, 2026 - 0.125%')
+exchange_txn_rate = "0.0003553"     # true-to-label: Rs 3,503/crore txn (NSE/FA/64232) + Rs 50/crore IPFT (NSE/FA/56129) = Rs 3,553 (NSE/FA/73061 table)
+sebi_fee_per_crore = "10"
+stamp_buy_rate = "0.00003"
+gst_rate = "0.18"
+verified = true
+verified_on = 2026-10-02
+notes = "Was UNVERIFIED (from memory) until 2-Oct-2026; every component now confirmed by an official source. NSE/FA/73061 cites the Sep-2024 circular as NSE/FA/64323; the PDF itself is numbered NSE/FA/64232 (27-Sep-2024)."
+sources = [
+    "NSE/FATAX/63809 (9-Sep-2024) https://nsearchives.nseindia.com/content/circulars/FATAX63809.pdf",
+    "Finance (No.2) Act 2024, Gazette of India (16-Aug-2024), copy at https://thc.nic.in/Central%20Governmental%20Acts/Finance%20(No.%202)%20Act,%202024.pdf",
+    "NSE/FA/64232 (27-Sep-2024) https://nsearchives.nseindia.com/content/circulars/FA64232.pdf",
+    "NSE/FA/56129 (24-Mar-2023) https://archives.nseindia.com/content/circulars/FA56129.pdf",
+    "NSE/FA/73061 (27-Feb-2026) https://nsearchives.nseindia.com/content/circulars/FA73061.pdf",
+    "SEBI/L.A.D.-N.R.O./G.N./2019/03 (22-Mar-2019) https://www.sebi.gov.in/sebi_data/meetingfiles/mar-2019/1553244864312_1.pdf",
+    "SEBI FAQ on Indian Stamp Act amendments (Jun-2020) https://www.sebi.gov.in/sebi_data/faqfiles/jun-2020/1593534237938.pdf",
+    "CBIC Notification 11/2017-Central Tax (Rate) https://cbic-gst.gov.in/hindi/pdf/central-tax-rate/Notification11-CGST.pdf",
+]
+
+[[schedule]]
+version = "CM-2026-03-01"
+effective_from = 2026-03-01
+effective_to = 2026-03-31
+stt_sell_rate = "0.0010"
+stt_exercise_rate = "0.00125"
+exchange_txn_rate = "0.0003553"   # txn Rs 3,552.99 + IPFT Rs 0.01 = Rs 3,553/crore (NSE/FA/73061, official PDF)
+sebi_fee_per_crore = "10"
+stamp_buy_rate = "0.00003"
+gst_rate = "0.18"
+verified = true
+notes = "STT rates 'up to 31-Mar-2026' per NSE STT circular (S14); txn split from 1-Mar-2026 (S47)."
+sources = ["S14", "S15", "S16", "S47", "NSE/FA/73061 (27-Feb-2026) https://nsearchives.nseindia.com/content/circulars/FA73061.pdf", "NSE/FATAX/73524 (31-Mar-2026): STT upto 31-Mar-2026 0.10% / 0.125%; same rates in BSE notice 20260331-7 https://www.bseindia.com/downloads/UploadDocs/Notices/20260331-7/20260331-7.pdf"]
+
+[[schedule]]
+version = "CM-2026-04-01"
+effective_from = 2026-04-01
+# open-ended: effective_to omitted
+stt_sell_rate = "0.0015"          # Finance Act 2026, w.e.f. 1-Apr-2026
+stt_exercise_rate = "0.0015"
+exchange_txn_rate = "0.0003553"
+sebi_fee_per_crore = "10"
+stamp_buy_rate = "0.00003"
+gst_rate = "0.18"
+verified = true
+notes = "Verified 30-Sep-2026 against NSE STT circular summary (S14) and Zerodha charges page (S16)."
+sources = ["S14", "S15", "S16", "S47"]

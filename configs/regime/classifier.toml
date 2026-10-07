@@ -1,0 +1,55 @@
+# Deterministic regime classifier (backlog K-11, docs/architecture/market-data.md + docs/research/validation.md §13.5). Versioned: any change is a new
+# [[classifier]] block with a new version; old blocks stay unchanged so every label can be traced to its config.
+# STATUS: UNVALIDATED. Every threshold below is an ASSUMED design default chosen before looking at any data (there is
+# no data: Dhan access is blocked by KYC). docs/research/validation.md §13.5: an unvalidated classifier means NO_EDGE for anything
+# that risks money; research and the SIMULATED dashboard may display and gate on its labels, labelled as such.
+# The loader picks the latest adopted_on unless a version is requested.
+
+[[classifier]]
+version = "RC-2026-10-02.1"
+adopted_on = 2026-10-02
+status = "UNVALIDATED"
+bar_minutes = 1
+warmup_bars = 15                 # before 09:30 every label is WARMUP (tags NO_EDGE): too little intraday data
+
+[classifier.trend]
+adx_period = 14                  # Wilder ADX on 1-minute bars
+adx_enter = "25"                 # a trend needs ADX >= enter ...
+adx_exit = "18"                  # ... and keeps it until ADX < exit (hysteresis band)
+slope_bars = 30                  # least-squares slope over the last 30 closes ...
+slope_enter_atr = "0.06"         # ... in ATR units per bar; |slope| >= enter votes trend
+slope_exit_atr = "0.03"
+vwap_enter_sigma = "1.0"         # distance from session VWAP in units of the session's close-to-VWAP sigma
+vwap_exit_sigma = "0.5"
+confirm_bars = 5                 # a new trend label must win the vote on 5 consecutive bars (3 flip-flopped 15x on a synthetic range day)
+
+[classifier.volatility]
+rv_bars = 30                     # realised vol of 1-minute log returns over 30 bars, annualised
+rv_compression = "9"             # annualised % below which RV votes compression ...
+rv_expansion = "18"              # ... and above which it votes expansion
+vix_compression = "12"           # India VIX level bands
+vix_expansion = "17"
+vix_change_bars = 30             # VIX change over 30 minutes ...
+vix_jump_pct = "6"               # ... a rise of >= 6% votes expansion (overrides the level vote)
+range_bars = 30                  # rolling high-low range over 30 bars, as a percentile of the session so far ...
+range_pct_compression = "20"     # ... <= 20th percentile votes compression
+range_pct_expansion = "80"       # ... >= 80th votes expansion
+range_min_history = 30           # percentiles need >= 30 earlier windows, else the range voter abstains
+band_pct = "10"                  # hysteresis: leaving a state needs the measure to cross the band by 10% of its value
+confirm_bars = 3
+
+[classifier.gap]
+flat_pct = "0.25"                # |open / previous close - 1| < 0.25% is FLAT
+large_pct = "0.8"                # >= 0.8% is a LARGE gap (GAP_UP_LARGE / GAP_DOWN_LARGE)
+
+[classifier.opening]
+decide_at_minutes = 30           # the opening character is decided 30 minutes after the open (09:45) and then fixed
+drive_close_frac = "0.7"         # drive: the 30-minute close sits in the outer 30% of the range, in the move direction
+drive_max_open_crosses = 1       # ... and price crossed the opening price at most once
+reversion_min_crosses = 3        # reversion: the opening price was crossed >= 3 times ...
+reversion_mid_frac = "0.35"      # ... or the 30-minute close is back within the middle 30% of the range
+
+[classifier.abnormal]
+index_move_pct = "3.0"           # |price / previous close - 1| >= 3% -> ABNORMAL_MARKET
+one_bar_move_pct = "0.8"         # a single 1-minute bar moving >= 0.8% -> ABNORMAL_MARKET for the rest of the session
+vix_level = "30"                 # India VIX >= 30 -> ABNORMAL_MARKET

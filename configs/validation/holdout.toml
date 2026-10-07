@@ -1,0 +1,29 @@
+# Untouched HOLDOUT partition (docs/research/validation.md §13.1). Fixed on 3-Oct-2026 BEFORE the regime research on
+# the full lake looked at any result: research code (classifier validation, strategy slicing, regime -> strategy maps,
+# shortlists) must drop every holdout day, and the final shortlist and portfolio are evaluated on it ONCE per version
+# (V16; the look is recorded in the experiment registry).
+#
+# Definition (docs/research/validation.md §13.1 "the most recent 6 months plus 20% of earlier weeks"):
+# * every day from `recent_from` to `recent_to` (the lake ends 1-Oct-2026), and
+# * a deterministic 20% of the earlier ISO weeks from `earliest`: the weeks are ranked by
+#   sha256("<selection_salt>|<ISO year>-W<week>") and the first round(share x N) are holdout. No data is used.
+#
+# Status PROPOSED: the design's own rule, adopted as the working default so that research can proceed honestly; a
+# change is a new [[holdout]] block (and every earlier holdout look stays counted). Windows already seen before this
+# file existed cannot be a holdout for what saw them: the H01/H01b pipeline checks ran on 11-May..1-Oct-2026 and
+# 30-Aug-2022..11-Sep-2024, so S-ORB-001/S-ORB-002 carry one prior holdout look (`prior_looks`).
+# 3-Oct-2026 15:30 IST: the single holdout read of map RM-2026-10-03.2 (scripts/regime_portfolio.py --holdout-look) ran
+# the ungated benchmark over every spec's holdout trades, so every spec now carries one more look; a further holdout
+# evaluation of any of them needs a new spec version (docs/research/validation.md V16).
+# Private research candidates carry their own prior looks in the private alpha library's copy of this file.
+
+[[holdout]]
+version = "HD-2026-10-03.1"
+adopted_on = 2026-10-03
+status = "PROPOSED"
+recent_from = 2026-04-01
+recent_to = 2026-10-01
+earliest = 2021-10-01
+earlier_week_share = "0.20"
+selection_salt = "HD-2026-10-03.1"
+prior_looks = { "S-DAYVOL-001" = 1, "S-EVTBO-001" = 1, "S-EXP0-001" = 1, "S-FBO-001" = 1, "S-GAPFADE-001" = 1, "S-GAPGO-001" = 1, "S-GEXMO-001" = 1, "S-IMOM-001" = 1, "S-IVRV-001" = 1, "S-LUNCH-001" = 1, "S-NOISE-001" = 1, "S-ORB-001" = 2, "S-ORB-002" = 2, "S-ORBML-001" = 1, "S-VIXSTR-001" = 1, "S-VOLX-001" = 1, "S-VWAPC-001" = 1, "S-VWAPMR-001" = 1 }

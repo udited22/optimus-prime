@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Project 100C · status</title>
+<link rel="icon" href="/favicon.svg">
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 2rem auto; max-width: 42rem; padding: 0 1rem;
+         background: #0b0f14; color: #d8dee6; }
+  h1 { font-size: 1.2rem; margin: 0 0 .25rem; }
+  .off { color: #f2b84b; font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+  td { padding: .35rem .5rem; border-bottom: 1px solid #1d2630; vertical-align: top; }
+  td:first-child { color: #8a96a3; width: 40%; }
+  .muted { color: #8a96a3; font-size: .85rem; }
+</style>
+</head>
+<body>
+<h1>Project 100C · engine status</h1>
+<p class="off">Real money is OFF. Paper / shadow mode: no strategy has passed validation.</p>
+<table id="rows"><tr><td>status</td><td>loading…</td></tr></table>
+<p class="muted" id="labels"></p>
+<p class="muted">Public view: no positions, P&amp;L or account data. Refreshes every 30 s. Times are IST.</p>
+<script src="/status.js"></script>
+</body>
+</html>

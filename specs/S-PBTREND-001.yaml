@@ -1,0 +1,89 @@
+# H40 (TT-4), promoted 3-Oct-2026 from specs/drafts/top-traders/ unchanged except version (0.1.0 -> 0.2.0) and
+# this note; library plug-in in strategies/library/signals_tt.py, deviations listed there and in
+# Pre-registered before any run.
+# TT-4 (top-traders literature review, kept private). Pre-registration DRAFT at
+# RESEARCH: no evidence, no confidence. Parameter values are pre-registered priors, not fitted. Not backtested.
+# Sources: pullback-in-trend (Elder's triple screen; Raschke & Connors' 2-period RSI; all grade D); trend direction
+# from time-series momentum and a 200-day average (Moskowitz, Ooi & Pedersen 2012, grade A; Faber 2007, grade B).
+# Distinct from the owner's own multi-timeframe trend + RSI/MACD scalp (tested by another worker): this is a once-a-day
+# DAILY-bar pullback with an intraday confirmation, not an intraday indicator scalp. Prior: LOW.
+# Approximate minimum NAV: one ATM leg ~INR 100-180 x 65 x 30% stop + costs -> ~INR 100k-180k at 2%.
+id: S-PBTREND-001
+version: 0.2.0
+status: RESEARCH
+owner_agent: research.toptraders
+created: 2026-10-03
+hypothesis: >
+  When the previous NIFTY close is above its 200-session average and the 2-period RSI of daily closes is below 10
+  (a short pullback in an uptrend), a CE bought after the index trades above the 09:15-09:45 high before 11:30 has
+  positive net expectancy and the 14:45 close is above the 09:45 close more often than on unfiltered days; mirror for
+  a PE below the 200-session average with RSI(2) above 90.
+economic_rationale: >
+  Short-horizon index returns partly reverse after sharp moves (liquidity providers are paid to absorb them) while
+  the long-horizon trend tends to persist; buying the short-term reversal only in the direction of the long-term
+  trend aligns both. The intraday confirmation avoids catching a falling knife.
+required_data:
+  - {dataset: nifty_index_1m, granularity: 1m, fields: [open, high, low, close], availability: AVAILABLE}
+  - {dataset: nifty_index_1d_from_1m, granularity: 1d, fields: [close], availability: AVAILABLE}
+  - {dataset: nifty_opt_1m_atm_band, granularity: 1m, fields: [open, high, low, close, volume], availability: AVAILABLE}
+signal:
+  formula: >
+    sma = mean(close, sma_len sessions); rsi2 = RSI(close, 2) at the previous close;
+    long setup if prev.close > sma and rsi2 < rsi_low: first 1m close in 09:45-11:30 above high(09:15-09:45) -> BUY CE;
+    short setup if prev.close < sma and rsi2 > 100 - rsi_low: first 1m close below low(09:15-09:45) -> BUY PE
+  params:
+    sma_len: {value: 200, min: 100, max: 250, step: 50}
+    rsi_low: {value: 10, min: 5, max: 25, step: 5}
+legs:
+  - {side: BUY, right: SIGNAL}
+eligible_regimes: [TRENDING_UP, TRENDING_DOWN, MEAN_REVERTING, VOLATILITY_NORMAL]
+prohibited_regimes: [EVENT_REGIME, EXPIRY_REGIME, LOW_LIQUIDITY, ABNORMAL_MARKET, NO_EDGE]
+invalidation_rules:
+  - kind: PRICE_LEVEL
+    description: "the index breaks the 09:15-09:45 low (CE) or high (PE)"
+    action: EXIT_POSITION
+  - kind: TIME
+    description: "no confirmation by 11:30"
+    action: STAND_DOWN_DAY
+  - kind: REGIME_CHANGE
+    description: "the market turns abnormal"
+    action: EXIT_POSITION
+    regimes: [ABNORMAL_MARKET]
+selection:
+  expiry: "nearest weekly with DTE >= 1"
+  strike: "delta 0.45-0.55 by own IV calc; spread <= 2 ticks"
+entry:
+  trigger: "first 1m close beyond the 09:15-09:45 range in the trend direction on a setup day"
+  window_start: "09:45:00"
+  window_end: "11:30:00"
+  order: {type: LIMIT, price_rule: "mid + 1 tick, capped at max_price", ttl_seconds: 10, max_chase_ticks: 2}
+  max_entries_per_day: 1
+exit:
+  stop: {method: PREMIUM_PCT, value: 30, order: SL_LIMIT, limit_offset_ticks: 4}
+  profit_taking: "none fixed: trail the index at the 09:15-09:45 range width from the best price since entry; else the time exit"
+  time_exit: "14:45:00"
+  max_holding_minutes: 300
+sizing:
+  method: "fixed 1 lot if risk_at_stop <= risk_budget else NO TRADE"
+  max_lots: 1
+  risk_at_stop_formula: "(entry - stop_fill_estimate) * lot + round_trip_costs + slippage_allowance"
+expected_frequency: "RSI(2) extremes in the trend direction occur a few times a month; about 1-2 signals a month (prior)"
+expected_slippage: {entry_ticks: 1, exit_ticks: 1, stop_ticks: 2, source: assumed}
+cost_assumptions: {cost_model_version: CM-2026-04-01, brokerage_plan: upstox-options}
+capacity: "high relative to one lot (NIFTY ATM liquidity)"
+failure_modes:
+  - "the reversal effect lives at a 1-5 day horizon and is mostly overnight; one intraday session captures little of it"
+  - "the 200-session average needs ~10 months of history, which shortens the testable lake to ~Aug-2022 onward"
+  - "few signals: the CI will be wide"
+falsification_criteria:
+  - "OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0"
+  - "the 09:45-14:45 index return on setup days is not larger in the trend direction than on non-setup days (p >= 0.10)"
+cost_sensitivity: >
+  Morning ATM premiums are about INR 100-180; a 30% stop risks about INR 1,950-3,500 a lot, so a round trip of about
+  INR 50-70 is 2-4% of the risk. Few signals make the per-trade fixed costs and the test's statistical power the
+  binding constraints.
+dependencies: {weekly_expiry: true}
+retirement_criteria:
+  - "OOS expectancy CI upper bound < 0"
+  - "live slippage > 2x assumed over 20 trades"
+event_certified: false

@@ -1,0 +1,146 @@
+# S-VWAPC-001 (docs/research/strategy-hypotheses.md strategy library). RESEARCH: no evidence, no confidence. Param values are pre-registered
+# priors, not fitted numbers. Every number here is ASSUMED until validated on real data.
+id: S-VWAPC-001
+version: 0.1.0
+status: RESEARCH
+owner_agent: research.library
+created: '2026-10-02'
+hypothesis: On a day that has held one side of session VWAP for >= 70% of minutes since 09:30, a pullback that touches VWAP
+  and closes back in the trend direction continues for at least 1.5 R more often than it fails.
+economic_rationale: Institutional execution is benchmarked to VWAP; on trend days pullbacks to VWAP attract benchmark-driven
+  flow in the trend direction.
+required_data:
+- dataset: nifty_index_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  availability: UNVERIFIED
+- dataset: nifty_opt_1m
+  granularity: 1m
+  fields:
+  - open
+  - high
+  - low
+  - close
+  - volume
+  availability: UNVERIFIED
+- dataset: india_vix_1m
+  granularity: 1m
+  availability: UNVERIFIED
+- dataset: nifty_fut_1m
+  granularity: 1m
+  fields:
+  - close
+  - volume
+  availability: UNCERTAIN
+  substitute: index TWAP proxy for VWAP (the run metadata records the basis used)
+signal:
+  formula: share of closes above VWAP >= trend_share and low <= VWAP + band and close > VWAP and close > prev close -> BUY
+    CE; mirror -> BUY PE
+  params:
+    trend_share:
+      value: 0.7
+      min: 0.6
+      max: 0.8
+      step: 0.05
+    touch_band_pct:
+      value: 0.03
+      min: 0.01
+      max: 0.1
+      step: 0.01
+    stop_band_pct:
+      value: 0.15
+      min: 0.05
+      max: 0.3
+      step: 0.05
+    start_minute:
+      value: 45
+      min: 30
+      max: 90
+      step: 15
+    use_futures_volume:
+      value: 1
+      min: 0
+      max: 1
+      step: 1
+legs:
+- side: BUY
+  right: SIGNAL
+eligible_regimes:
+- TRENDING_UP
+- TRENDING_DOWN
+prohibited_regimes:
+- EVENT_REGIME
+- LOW_LIQUIDITY
+- ABNORMAL_MARKET
+- NO_EDGE
+invalidation_rules:
+- kind: PRICE_LEVEL
+  description: a close beyond VWAP by stop_band_pct against the trade (the trend day is over)
+  action: EXIT_POSITION
+- kind: REGIME_CHANGE
+  description: the classifier turns range-bound or abnormal
+  action: EXIT_POSITION
+  regimes:
+  - MEAN_REVERTING
+  - ABNORMAL_MARKET
+- kind: DATA
+  description: 'the index or option bar of a minute is missing: no entry on that minute'
+  action: CANCEL_ENTRY
+selection:
+  expiry: nearest weekly with DTE >= 1
+  strike: ATM (nearest the index); delta band not implemented
+entry:
+  trigger: first VWAP touch-and-resume after 10:00
+  window_start: '10:00:00'
+  window_end: '13:30:00'
+  order:
+    type: LIMIT
+    price_rule: last option close + 1 tick (mid proxy), chase capped at first limit + max_chase_ticks
+    ttl_seconds: 60
+    max_chase_ticks: 2
+  max_entries_per_day: 2  # OD-014 style default (docs/research/strategy-hypotheses.md entry caps): a trend day can give more than one VWAP pullback; held at 2 for cost drag
+exit:
+  stop:
+    method: PREMIUM_PCT
+    value: 30
+    order: SL_LIMIT
+    limit_offset_ticks: 4
+  profit_taking: 1.5 R
+  time_exit: '14:30:00'
+  max_holding_minutes: 60
+sizing:
+  method: 1 lot per leg if the summed risk_at_stop <= the per-trade budget (2% NAV) else NO TRADE
+  max_lots: 1
+  risk_at_stop_formula: sum over legs of (entry - stop_limit) * lot + round-trip charges + (entry+stop slippage ticks) *
+    tick * lot
+expected_frequency: 1-2 signals/week on trend days (prior)
+expected_slippage:
+  entry_ticks: 1
+  exit_ticks: 1
+  stop_ticks: 2
+  source: assumed
+cost_assumptions:
+  cost_model_version: CM-2026-04-01
+  brokerage_plan: upstox-options
+capacity: high relative to one lot (NIFTY weekly ATM liquidity)
+failure_modes:
+- late-day reversals
+- trend misclassification
+- the TWAP proxy differs from the true VWAP on volume-skewed days
+falsification_criteria:
+- OOS net expectancy per trade (R) 90% bootstrap CI upper bound < 0
+- gated (trend days) results are not better than the same rule on all days
+cost_sensitivity: A 1.5 R target on a 30% stop is a 45% premium move; at ATM premiums of INR 80-150 that is 35-70 points,
+  so costs are 5-10% of the target. The futures-VWAP vs TWAP choice can change the entries; both must be reported.
+dependencies:
+  weekly_expiry: true
+retirement_criteria:
+- OOS expectancy CI upper bound < 0
+- live slippage > 2x assumed over 20 trades
+# Event days (OD-014 default, 2-Oct-2026): NOT certified, so no entries on an EVENT_REGIME day. Setting true needs
+# an event_certification record from validation/event_cert.py (VALIDATED on historical event-day trades, REAL data).
+event_certified: false

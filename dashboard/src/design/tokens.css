@@ -1,0 +1,90 @@
+/* Project 100C · Jarvis v3 design tokens (docs/architecture/observability.md §17.5).
+   One accent (icy cyan) for AI / system / active; green, amber and red are functional only.
+   Every component reads these variables; nothing else in the app hard-codes a colour, size or duration. */
+:root {
+  /* surfaces: the canvas, then two barely-raised regions. Most surfaces should disappear. */
+  --bg: #07090c;
+  --surface-1: #0d1116;
+  --surface-2: #11161c;
+  --surface-3: #171d24;
+  --hair: rgba(255, 255, 255, 0.055);
+  --hair-2: rgba(255, 255, 255, 0.09);
+  --hair-3: rgba(255, 255, 255, 0.14);
+
+  /* text */
+  --text-1: #e8edf2;
+  --text-2: #8b96a3;
+  --text-3: #56616d;
+  --text-4: #3a434d;
+
+  /* the single system accent + functional colours */
+  --accent: #7cd4f7;
+  --accent-2: #4fb6e3;
+  --accent-a08: rgba(124, 212, 247, 0.08);
+  --accent-a16: rgba(124, 212, 247, 0.16);
+  --accent-a32: rgba(124, 212, 247, 0.32);
+  --pos: #45d08f;
+  --pos-a12: rgba(69, 208, 143, 0.12);
+  --warn: #f0b44c;
+  --warn-a08: rgba(240, 180, 76, 0.08);
+  --warn-a12: rgba(240, 180, 76, 0.12);
+  --warn-a24: rgba(240, 180, 76, 0.24);
+  --neg: #f2626b;
+  --neg-a08: rgba(242, 98, 107, 0.08);
+  --neg-a12: rgba(242, 98, 107, 0.12);
+  --neg-a24: rgba(242, 98, 107, 0.24);
+  /* replay gets one subtle accent of its own so history can never be mistaken for the stream */
+  --replay: #a99cf2;
+  --strategy: #a89cf2; /* neural field: strategy / reasoning (the brief's soft violet) */
+  --replay-a12: rgba(169, 156, 242, 0.12);
+
+  /* typography */
+  --font-ui: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --fs-2xs: 0.6875rem; /* 11 */
+  --fs-xs: 0.75rem; /* 12 */
+  --fs-sm: 0.8125rem; /* 13 */
+  --fs-md: 0.875rem; /* 14 */
+  --fs-lg: 1rem; /* 16 */
+  --fs-xl: 1.25rem; /* 20 */
+  --fs-2xl: 1.625rem; /* 26 */
+  --fs-3xl: 2.25rem; /* 36 */
+  --fw-regular: 420;
+  --fw-medium: 520;
+  --fw-semibold: 620;
+  --tracking-caps: 0.09em;
+
+  /* spacing (4-pt) */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-7: 2rem;
+  --sp-8: 2.75rem;
+
+  /* shape and depth */
+  --r-1: 6px;
+  --r-2: 10px;
+  --r-3: 14px;
+  --shadow-pop: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--hair-2);
+
+  /* motion: 150-250 ms, one easing curve */
+  --t-fast: 150ms;
+  --t-med: 220ms;
+  --t-slow: 600ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* layout */
+  --bar-h: 3.5rem; /* the command bar, 56 px at the base size */
+  --rail-gap: var(--sp-7);
+}
+
+/* the root size scales the whole system so components reflow instead of shrinking */
+html { font-size: 14px; }
+@media (min-width: 2200px) and (min-height: 1250px) { html { font-size: 15.5px; } }
+@media (max-width: 1500px) { html { font-size: 13px; } }
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 0ms; --t-med: 0ms; --t-slow: 0ms; }
+}
