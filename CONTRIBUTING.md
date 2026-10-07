@@ -1,48 +1,44 @@
 # Contributing and development rules
 
-Optimus Prime is a personal research project. These rules apply to every change, whether a human or an agent makes it. The project constitution (kept private) always wins over this file.
+Optimus Prime is a personal quantitative-research and systems-engineering project. Changes should preserve reproducibility, explicit uncertainty and strict separation between research logic and transactional authority.
 
 ## Setup
 
 ```bash
 uv venv -p 3.13 .venv
 uv pip install --python .venv/bin/python -e ".[dev]"
-(cd dashboard && npm ci)   # only needed for the dashboard and its build test
+(cd dashboard && npm ci)
 ```
 
-## The gate: every commit must pass all four
+## Quality gate
+
+Every change should pass the same gates enforced by CI:
 
 ```bash
 .venv/bin/ruff check src tests scripts
 .venv/bin/ruff format --check src tests scripts
-.venv/bin/mypy                 # strict, covers src/ and tests/
+.venv/bin/mypy
 .venv/bin/python -m pytest -q
+(cd dashboard && npm test && npm run build)
 ```
 
-There is no CI workflow in this repository yet: run the four checks and `gitleaks git --redact .` locally before every push.
+The repository also runs a secrets scan in CI.
 
-## Rules
+## Engineering rules
 
-1. **Tests with every module.** New behaviour ships with tests in the same commit. Safety-relevant code (Governor, mandate, kills, journal, broker adapters, data ingest) also needs failure-injection tests, and Hypothesis property tests where a property exists, for example "never net short" or "every order is LIMIT or SL-limit on the tick grid".
-2. **Strict typing.** `mypy --strict` over `src/` and `tests/`. No `Any` leaks and no `type: ignore` without a reason in a comment. Money and prices are `Decimal`, never `float`. Timestamps are timezone-aware (IST).
-3. **No silent failures.** Raise the typed errors in [`src/project100c/errors.py`](src/project100c/errors.py) (`ConfigError`, `DataQualityInputError`, `MissingCredentialError`, ...). Never swallow an exception, never "fix" data quietly, never fall back to a default. Unknown or untrustworthy state disables entries. DQ problems become explicit issues, quarantine or `NO_DATA` records.
-4. **One module per commit.** Each commit implements one backlog item or one module and names it in the title (for example `K-08: ...` or `D-06: ...`). Policy changes (OD-xxx rules, see [docs/risk/policy-rules.md](docs/risk/policy-rules.md)) get their own commit. Never rewrite published history.
-5. **Versioned configuration, not constants.** Costs, sessions, trading windows, risk limits and the calendar live in `configs/` with version IDs and effective dates. Old versions are kept so historical runs stay reproducible.
-6. **Honest labels.** Synthetic or fixture data is labelled **SIMULATED**. Modelled quantities, such as synthetic spreads, are labelled **ASSUMED**. Behaviour not yet confirmed against a real broker or vendor is labelled **UNVERIFIED**. Never present a backtest as evidence without the validation in docs/research/validation.md.
-7. **Safety boundaries.**
-   - No LLM or agent path to orders. Every order passes the deterministic Risk Governor.
-   - Long options only (OD-006).
-   - The trading window and the hard flat are enforced in code (OD-002/008/009).
-   - The Dhan client is data only (OD-011).
-   - Changes to the constitution, risk limits or OD-xxx policy rules need the owner's explicit approval.
-8. **No secrets in git, ever.**
-   - Credentials come only from environment variables (for example `DHAN_ACCESS_TOKEN`) or the gitignored `configs/local/`.
-   - Never log, print or persist a token.
-   - Run `gitleaks git --redact .` before pushing.
-   - If a secret is ever committed, stop, rotate it, and tell the owner. Do not just delete it in a new commit.
-9. **Docs follow code, briefly.** No per-commit commentary or conversation records in this repository.
-   - **Public-repo rule:** no wealth or income targets, prompts, chat history, personal instructions, decision transcripts, capital or broker-account details, secrets, alpha parameters of live candidates or trading journals. Live candidates belong in the private alpha library ([docs/engineering/private-alpha.md](docs/engineering/private-alpha.md)).
-10. **The README states only what is committed, and every push refreshes its status.**
-    - Keep the README's short "Current status" table accurate (date and test counts from an actual run).
-    - Describe only what exists on `main`.
-    - Market data (`lake/`) and credentials (`configs/local/`) are never committed.
+1. **Tests travel with behaviour.** New behaviour requires tests in the same change. Safety-relevant components need negative-path and failure-injection coverage; property tests are preferred where an invariant can be expressed directly.
+2. **Strict typing.** `mypy --strict` covers `src/` and `tests/`. Avoid unbounded `Any`; money and prices use `Decimal`; timestamps are timezone-aware.
+3. **No silent repair.** Invalid data, configuration or external state must produce an explicit typed failure, quarantine or `NO_DATA` outcome. Unknown state must not quietly become a default value.
+4. **Version configuration.** Costs, sessions, risk policy, calendars and research configuration are versioned so historical runs remain reproducible.
+5. **Separate research from authority.** Research code may propose strategies and intents. It does not bypass deterministic risk or execution controls.
+6. **Fail closed.** Untrusted market data, inconsistent state or failed reconciliation blocks new exposure until the condition is understood.
+7. **Honest labels.** Synthetic/fixture output is `SIMULATED`; modelled quantities are `ASSUMED`; behaviour not confirmed against the relevant external interface is `UNVERIFIED`.
+8. **No secrets in git.** Credentials come from environment variables or ignored local configuration. Never log or persist credentials. Rotate immediately if a secret is ever committed.
+9. **Keep public docs enduring.** The public repository should contain architecture, methodology and reproducible engineering evidence — not chat transcripts, personal capital targets, broker-account details, deployment secrets, live strategy parameters or trading journals.
+10. **Keep the README factual.** Describe only capabilities that exist in the current branch and do not imply validated edge or live deployment where neither exists.
+
+## Public engine / private research
+
+Exact rules and parameters for current candidate strategies belong outside the public repository. The public engine must remain testable with synthetic/public stand-ins and must enforce the same validation and risk boundaries regardless of where a candidate strategy is loaded from.
+
+See [docs/engineering/private-alpha.md](docs/engineering/private-alpha.md).
