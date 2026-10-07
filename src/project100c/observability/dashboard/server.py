@@ -177,6 +177,14 @@ class Handler(BaseHTTPRequestHandler):
 
     do_PUT = do_DELETE = do_PATCH = do_OPTIONS = do_TRACE = do_CONNECT = _refuse
 
+    def _discard_body(self) -> None:
+        """Drain a bounded unexpected body before closing a read-only streaming response."""
+        n = int(self.headers.get("Content-Length") or 0)
+        if n > MAX_BODY:
+            raise DashboardError("request body too large")
+        if n:
+            self.rfile.read(n)
+
     def _body(self) -> dict[str, Any]:
         n = int(self.headers.get("Content-Length") or 0)
         if n > MAX_BODY:
@@ -249,6 +257,7 @@ class Handler(BaseHTTPRequestHandler):
         )
 
     def h_stream(self, path: str, q: dict[str, list[str]]) -> None:
+        self._discard_body()
         after_raw = (q.get("after") or [self.headers.get("Last-Event-ID") or ""])[0]
         try:
             after = int(after_raw) if after_raw else self.app.bus.last_seq
