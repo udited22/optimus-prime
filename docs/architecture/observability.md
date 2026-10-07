@@ -27,6 +27,10 @@ The **COGNITIVE CONNECTOME** renderer maps domain events through `commandsFor`, 
 | `promote` | research artefact changed lifecycle state |
 | `kill` | safety state entered; pathway moves toward terminate / halted presentation |
 
+The cognitive-state projection is one of: `WATCHING`, `EVALUATING`, `REJECTED`, `EXECUTING`, or `HALTED`. These labels describe what the system is doing; they do not grant control authority.
+
+Strategy-pattern state is similarly explicit: `dormant`, `researching`, `candidate`, `live`, `paused`, `killed`, `evaluating`, or `rejected`. In this public repository, a `live` visual state is part of the mapping vocabulary only; the public build itself does not enable live trading.
+
 `RISK` and `EXECUTION` are distinct visual regions because they are distinct authority boundaries in the architecture. A condition such as `BROKER_CONNECTIVITY_KILL` must render as an explicit failure/safety state rather than as ordinary activity.
 
 In the public build, execution visuals are **simulate-only** or paper-derived. Live order authority is **not produced** by the command centre.
