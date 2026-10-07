@@ -1,19 +1,22 @@
-# Public engine, private alpha library
+# Public engine, private alpha
 
-This repository holds the engine: data, cost model, backtester, validation, experiment registry, Risk Governor,
-execution, paper book, economics and the UI. Live research candidates do not live here. Their exact rules,
-parameters, signal plug-ins, structure specs and research-round configs sit in a separate, private **alpha library**.
+Optimus Prime separates **reusable trading infrastructure** from **current candidate strategy IP**.
 
-`src/project100c/alpha.py` is the boundary:
+The public repository contains the engine: data ingestion, cost modelling, backtesting, validation, experiment tracking, portfolio primitives, deterministic risk, execution state machines, paper adapters and observability.
 
-- **Discovery.** `$P100C_ALPHA_DIR` (must exist if set), else `<repo>/private_alpha/` (gitignored). Absent = the public
-  engine on its own; every test passes that way.
-- **Plug-ins.** If the library has a `private_alpha` Python package with a `PLUGINS` dict, the strategy library adds
-  those ids at import (`strategies.library.PRIVATE_PLUGIN_IDS`). A private id may never replace a public one.
-- **Specs.** `load_library_specs` reads the public `specs/` and then the library's `specs/`; structure specs come from
-  `specs/structures/`. Private specs go through the same schema, loaders and Governor.
-- **Configs.** `alpha.config_path(rel, configs)` returns the library's `configs/<rel>` when present (for example a
-  research round or holdout with candidate looks), else the public file.
+Current candidate strategies may live in a separate private alpha library. That library can contribute strategy plug-ins, specifications and research configuration, but it receives no special authority.
 
-Nothing in the library gains live authority: live orders still need a VALIDATED spec, the Governor, the kill
-switches and the live lock. Synthetic stand-ins for the private structures are in `examples/`.
+## Boundary rules
+
+1. **The public engine must work without the private library.** Tests and examples use public/synthetic stand-ins.
+2. **Private strategies use the same contracts.** They are loaded through the same typed schemas as public research specifications.
+3. **Private code cannot replace core safety components.** It may provide strategy/research artefacts, not an alternate Risk Governor, execution gateway or reconciliation path.
+4. **No candidate bypasses validation.** Being private does not make a strategy promoted or capital-eligible.
+5. **No candidate bypasses risk.** Every resulting trade intent is evaluated by the same deterministic admission layer.
+6. **Secrets and account configuration are not part of alpha.** The private strategy library is not a credential store or deployment runbook.
+
+## Why this split exists
+
+Publishing the infrastructure makes the engineering model reviewable without turning a public portfolio repository into a catalogue of live hypotheses and parameters.
+
+It also forces a useful architectural discipline: if the engine only works when hidden strategy code is present, then the public/private boundary is not real. Optimus Prime therefore keeps synthetic examples and public research artefacts sufficient to exercise the interfaces and safety model independently.
