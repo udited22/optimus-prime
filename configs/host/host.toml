@@ -15,7 +15,7 @@ max_consecutive_failures = 5
 
 [schedule]
 token_request = "08:45:00"   # illustrative paper-session schedule
- gate_deadline = "09:05:00"
+gate_deadline = "09:05:00"
 end_of_day = "15:35:00"
 
 [feed_keys]
