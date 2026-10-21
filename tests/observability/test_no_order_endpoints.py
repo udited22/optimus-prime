@@ -8,10 +8,12 @@ behind the server, whose journal must show no new order), the server module's im
 from __future__ import annotations
 
 import ast
+import errno
 import json
 import re
 from datetime import time
 from pathlib import Path
+from typing import Any
 
 import pytest
 from hypothesis import given, settings
@@ -117,6 +119,30 @@ def _orders(path: Path) -> int:
     return len(_records(path, "ORDER_SUBMITTED"))
 
 
+def _is_expected_unread_body_reset(method: str, body: bytes | None, exc: BaseException) -> bool:
+    """The ONE transport failure the probe tolerates. GET routes never read a request body; after answering they
+    close the socket with our body bytes still unread, and the kernel then sends a TCP RST, which can surface as
+    ECONNRESET while we are still reading the response (seen on ``GET /`` in CI, 1 in ~30 locally). Only that exact
+    combination qualifies: a GET, carrying a body, failing with ConnectionResetError/ECONNRESET. Everything else
+    (other methods, no body, broken pipe, timeouts, refused connections, other errnos) is a real failure."""
+    return method == "GET" and bool(body) and type(exc) is ConnectionResetError and exc.errno == errno.ECONNRESET
+
+
+def _probe_route(s: Any, method: str, path: str, body: bytes | None, headers: dict[str, str]) -> int | None:
+    """HTTP status, or None for the tolerated unread-body reset only; any other exception propagates."""
+    try:
+        status, _, _ = s.request(method, path, body, headers)
+    except ConnectionResetError as e:
+        if _is_expected_unread_body_reset(method, body, e):
+            return None
+        raise
+    return int(status)
+
+
+def _assert_not_server_error(method: str, path: str, status: int | None) -> None:
+    assert status is None or status < 500, (method, path, status)
+
+
 def test_http_probing_never_creates_an_order(sim_server) -> None:  # type: ignore[no-untyped-def]
     s, sess, jpath = sim_server
     before = _orders(jpath)
@@ -129,9 +155,10 @@ def test_http_probing_never_creates_an_order(sim_server) -> None:  # type: ignor
                 assert st_ in (404, 405), (m, path, st_)
             else:
                 assert st_ == 501, (m, path, st_)
-    for r in ROUTES:  # every real route, fed an order-shaped body, still sends nothing
+    for r in ROUTES:  # every real route, fed an order-shaped body, still sends nothing and never errors (5xx)
         path = r.path + ("x" if r.prefix else "")
-        s.request(r.method, path + ("?once=1" if "stream" in path else ""), body, HDR)
+        st_ = _probe_route(s, r.method, path + ("?once=1" if "stream" in path else ""), body, HDR)
+        _assert_not_server_error(r.method, path, st_)
     assert _orders(jpath) == before
     assert all(sw.value != "MANUAL_MASTER_KILL" for sw, _ in sess.rt.state.kills)
 
@@ -210,3 +237,56 @@ def test_live_runner_kill_end_to_end(kernel: Kernel, tmp_path: Path) -> None:
         assert latched == ["MANUAL_MASTER_KILL"]
     finally:
         runner.stop()
+
+
+class _FakeServer:
+    """Stands in for helpers.Running: request() raises the given exception or returns the given status."""
+
+    def __init__(self, outcome: BaseException | int) -> None:
+        self.outcome = outcome
+
+    def request(
+        self, method: str, path: str, body: bytes | None = None, headers: dict[str, str] | None = None
+    ) -> tuple[int, dict[str, str], bytes]:
+        if isinstance(self.outcome, BaseException):
+            raise self.outcome
+        return self.outcome, {}, b""
+
+
+BODY = b'{"side": "BUY"}'
+
+
+def _reset(code: int = errno.ECONNRESET) -> ConnectionResetError:
+    return ConnectionResetError(code, "Connection reset by peer")
+
+
+def test_probe_tolerates_only_the_get_unread_body_reset() -> None:
+    assert _probe_route(_FakeServer(_reset()), "GET", "/", BODY, HDR) is None
+    assert _probe_route(_FakeServer(200), "GET", "/", BODY, HDR) == 200
+
+
+@pytest.mark.parametrize(
+    ("method", "body", "exc"),
+    [
+        ("POST", BODY, _reset()),  # a reset on a route that reads its body is a real failure
+        ("GET", None, _reset()),  # no unread body, so no reason for a reset
+        ("GET", BODY, _reset(errno.EPIPE)),  # a ConnectionResetError with another errno
+        ("GET", BODY, BrokenPipeError(errno.EPIPE, "Broken pipe")),
+        ("GET", BODY, TimeoutError("timed out")),
+        ("GET", BODY, ConnectionRefusedError(errno.ECONNREFUSED, "refused")),
+        ("GET", BODY, OSError(errno.EHOSTUNREACH, "unreachable")),
+        ("GET", BODY, RuntimeError("application bug in the client")),
+    ],
+)
+def test_probe_propagates_every_other_transport_or_application_failure(
+    method: str, body: bytes | None, exc: BaseException
+) -> None:
+    with pytest.raises(type(exc)):
+        _probe_route(_FakeServer(exc), method, "/api/health", body, HDR)
+
+
+@pytest.mark.parametrize("status", [500, 502, 503])
+def test_server_errors_still_fail_the_probe(status: int) -> None:
+    st_ = _probe_route(_FakeServer(status), "GET", "/api/health", BODY, HDR)
+    with pytest.raises(AssertionError):
+        _assert_not_server_error("GET", "/api/health", st_)

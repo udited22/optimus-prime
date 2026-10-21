@@ -1,0 +1,40 @@
+# CI dependency constraints: the exact versions of the verified reference environment (Python 3.13).
+# Why: an unpinned resolver once picked up a newer pydantic whose generated JSON schema differs, which broke
+# test_committed_json_schema_matches_models in CI only. Upgrades are deliberate: bump here, rerun the suite, commit.
+# CI Python is fixed at 3.13.16 (.github/workflows/ci.yml); every install step must pass -c ci/constraints.txt
+# (enforced by tests/test_ci_policy.py).
+annotated-types==0.8.0
+ast-serialize==0.12.1
+cffi==2.1.1
+contourpy==1.4.0
+cryptography==50.0.2
+cycler==0.12.1
+fonttools==4.66.1
+hypothesis==6.168.5
+iniconfig==2.3.1
+kiwisolver==1.5.1
+librt==0.16.0
+matplotlib==3.11.2
+mypy-extensions==1.1.0
+mypy==2.4.0
+numpy==2.5.3
+packaging==26.3
+pathspec==1.1.1
+pillow==12.3.0
+pluggy==1.6.0
+pyarrow==25.0.1
+pycparser==3.0
+pydantic-core==2.46.5
+pydantic==2.13.5
+pygments==2.21.0
+pyparsing==3.3.3
+pytest==9.1.1
+python-dateutil==2.9.0.post0
+pyyaml==6.0.3
+ruff==0.16.10
+six==1.17.0
+sortedcontainers==2.4.0
+types-pyyaml==6.0.12.20260906
+typing-extensions==4.16.0
+typing-inspection==0.4.4
+uv==0.12.23

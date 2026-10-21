@@ -10,9 +10,9 @@ Optimus Prime treats systematic trading as an end-to-end systems problem: data q
 
 ![Optimus Prime command centre — simulated data](docs/screenshots/v3.2/05-terminal-1440p.png)
 
-## Research Production v1
+## October 2026 milestone: Research Production v1 (in progress)
 
-The research system now runs as a continuous, auditable process: a data-only live option-chain recorder with a fail-closed preflight, an explicit missing-data register, write-once prospective paper evidence kept separate from retrospective diagnostics, a verified off-box backup and a read-only production view. These components run in the private deployment and are not part of this public snapshot. Live autonomous capital execution is not production-enabled yet. See [Research Production v1](docs/engineering/research-production.md).
+In October 2026 the research side of Optimus Prime began running as a continuous process in a private deployment: a data-only live option-chain recorder with a fail-closed preflight, an explicit missing-data register, write-once prospective paper evidence kept separate from retrospective diagnostics, an off-box backup and a read-only production view. **The milestone's production acceptance gate is still open**: these components are running and under review, not yet accepted as production. They are not part of this public snapshot. Live autonomous capital execution is not production-enabled yet. See [Research Production v1](docs/engineering/research-production.md).
 
 ## Why this exists
 
@@ -22,23 +22,33 @@ The research layer is intentionally allowed to experiment. Transactional authori
 
 ## Architecture
 
+The architecture is shown in two parts, because only the first runs today.
+
+**Shipped — research and evidence path (research and paper only):**
+
 ```mermaid
 flowchart LR
-    A[Market & reference data] --> B[Data quality + lineage]
-    B --> C[Research & backtesting]
-    C --> D[Validation & experiment registry]
-    D --> E[Portfolio / market context]
-    E --> F[Trade intent]
-    F --> G{Deterministic Risk Governor}
-    G -->|reject| H[No trade / halt]
-    G -->|approve| I[Execution state machine]
-    I --> J[Paper / broker adapter]
-    J --> K[Independent reconciliation]
-    K --> L[Append-only journal + command centre]
-    L --> G
+    A[Market Data] --> B[PIT / Research Data]
+    B --> C[Experiment Registry]
+    C --> D[Validation]
+    D --> E[Prospective Evidence]
+    E --> F[Research Review]
 ```
 
-The system is deliberately split into four public concepts:
+**Under development — not production-enabled:**
+
+```mermaid
+flowchart LR
+    P[Portfolio] --> G{Governor}
+    G --> S[Sizing]
+    S --> X[Execution]
+    X --> R[Reconciliation / TCA]
+    R --> L[Live Capital]
+```
+
+The second path exists as engine code with tests against fake and paper adapters only. Nothing in it is connected to a live broker, and no strategy has earned access to it. Research Review is a human decision; nothing flows automatically from the first path into the second.
+
+The engine is organised around four public concepts:
 
 - **Research** — market data, hypotheses, backtests, cost models, validation and experiment tracking.
 - **Portfolio** — market context, regime information and strategy/capital allocation.
@@ -53,9 +63,9 @@ Language models or research agents are never part of the authoritative order pat
 |---|---|
 | **Data** | Exchange calendars and instrument metadata, resumable historical-data ingestion, public crypto/US starter loaders, content-addressed Parquet storage, lineage and data-quality quarantine. Market data itself is not committed. |
 | **Research** | Event-driven backtester, versioned strategy specifications, structure simulator, realistic cost modelling, holdout testing, experiment registry and a multi-stage validation toolkit. |
-| **Portfolio** | Market-context/regime plumbing and portfolio allocation primitives. These remain research components until independently validated. |
-| **Risk** | Deterministic Risk Governor, typed risk decisions, kill switches, state reconstruction from the journal and fail-closed handling of untrusted state. |
-| **Execution** | Order state machine, idempotent request handling, fake/paper adapters and independent reconciliation. Live execution is disabled in the public build. |
+| **Portfolio** | Market-context/regime plumbing and portfolio allocation primitives. Under development; research components until independently validated. |
+| **Risk** | Deterministic Risk Governor, typed risk decisions, kill switches, state reconstruction from the journal and fail-closed handling of untrusted state. Exercised in tests and simulation; under development for live use. |
+| **Execution** | Order state machine, idempotent request handling, fake/paper adapters and independent reconciliation. Under development; live execution is disabled. |
 | **Observability** | Read-only TypeScript command centre backed by real kernel/Governor events generated against simulated execution. |
 
 ## Evidence over optimism
@@ -85,15 +95,15 @@ That is a feature, not an embarrassment: Optimus Prime is designed to make false
 - [Research methodology](docs/research/methodology.md) — how experiments are structured.
 - [Validation](docs/research/validation.md) — promotion gates and holdout discipline.
 - [Private-alpha boundary](docs/engineering/private-alpha.md) — how reusable infrastructure remains public without publishing live research candidates.
-- [Research Production v1](docs/engineering/research-production.md) — what runs continuously today and what it cannot do.
+- [Research Production v1](docs/engineering/research-production.md) — the October 2026 milestone (acceptance gate open) and what it cannot do.
 
 ## Install and test
 
-Python 3.12+ is required; Node 20+ is used by the command centre.
+Python 3.12+ is required (CI uses Python 3.13.16 and the exact pins in `ci/constraints.txt`); Node 20+ is used by the command centre.
 
 ```bash
 python -m venv .venv
-.venv/bin/pip install -e ".[dev]"
+.venv/bin/pip install -e ".[dev]" -c ci/constraints.txt
 (cd dashboard && npm ci)
 
 .venv/bin/ruff check src tests scripts
@@ -103,7 +113,7 @@ python -m venv .venv
 (cd dashboard && npm test -- --run && npm run build)
 ```
 
-CI runs the same quality gates on every push and pull request.
+CI runs the same quality gates on every pull request and on pushes to `main`, with a fixed Python version and pinned dependencies so results are reproducible.
 
 ## Repository map
 

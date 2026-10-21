@@ -91,7 +91,7 @@ date = 2021-11-04
 kind = "SPECIAL_SESSION"
 description = "Diwali Laxmi Pujan"
 verified = true
-note = "Listed as a trading holiday with an evening Muhurat session (ET, 03-Nov-2021: starts 18:15 IST; timing single-source); not a regular trading day for Project 100C"
+note = "Listed as a trading holiday with an evening Muhurat session (ET, 03-Nov-2021: starts 18:15 IST; timing single-source); not a regular trading day for Optimus Prime"
 sources = ["NSE/CMTR/46623 (11-Dec-2020) trading holidays 2021, via touchbroking.com mirror of the NSE circular (Muhurat trading noted)", "BSE notice 20201210-7 (10-Dec-2020) trading holidays 2021, Equity/Equity Derivatives/SLB (bseindia.com) (Muhurat trading noted)"]
 
 [[day]]
@@ -183,7 +183,7 @@ date = 2022-10-24
 kind = "SPECIAL_SESSION"
 description = "Diwali Laxmi Pujan"
 verified = true
-note = "Listed as a trading holiday with an evening Muhurat session (timing not recorded); not a regular trading day for Project 100C"
+note = "Listed as a trading holiday with an evening Muhurat session (timing not recorded); not a regular trading day for Optimus Prime"
 sources = ["NSE/CMTR/50560 (10-Dec-2021) trading holidays 2022 (archives.nseindia.com) (Muhurat trading noted)", "BSE 2022 trading-holiday list, Equity/Equity Derivatives/SLB, as reproduced by kuvera.in/blog/bse-holidays-in-2022 (Muhurat trading noted)"]
 
 [[day]]
@@ -290,7 +290,7 @@ date = 2023-11-12
 kind = "SPECIAL_SESSION"
 description = "Diwali Laxmi Pujan (Sunday)"
 verified = true
-note = "Sunday Muhurat session (timing not recorded); not a regular trading day for Project 100C"
+note = "Sunday Muhurat session (timing not recorded); not a regular trading day for Optimus Prime"
 sources = ["NSE/FAOP/54759 (08-Dec-2022) trading holidays 2023, F&O segment (archives.nseindia.com) (Muhurat trading noted)", "BSE notice 20221208-31 (08-Dec-2022) trading holidays 2023, Equity/Equity Derivatives/SLB (bseindia.com) (Muhurat trading noted)"]
 
 [[day]]
@@ -319,7 +319,7 @@ date = 2024-01-20
 kind = "SPECIAL_SESSION"
 description = "Special Trading"
 verified = false
-note = "NFO session 09:15-15:30 IST per Upstox; not a regular trading day for Project 100C"
+note = "NFO session 09:15-15:30 IST per Upstox; not a regular trading day for Optimus Prime"
 sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "upstox-api market holidays: BFO open with session times on 2024-01-20, identical to NFO"]
 
 [[day]]
@@ -349,7 +349,7 @@ date = 2024-03-02
 kind = "SPECIAL_SESSION"
 description = "Special DR Trading"
 verified = false
-note = "NFO session 09:15-12:30 IST per Upstox; not a regular trading day for Project 100C"
+note = "NFO session 09:15-12:30 IST per Upstox; not a regular trading day for Optimus Prime"
 sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "upstox-api market holidays: BFO open with session times on 2024-03-02, identical to NFO"]
 
 [[day]]
@@ -415,7 +415,7 @@ date = 2024-05-18
 kind = "SPECIAL_SESSION"
 description = "Special DR Trading(18th May)"
 verified = false
-note = "NFO session 09:15-12:30 IST per Upstox; not a regular trading day for Project 100C"
+note = "NFO session 09:15-12:30 IST per Upstox; not a regular trading day for Optimus Prime"
 sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "upstox-api market holidays: BFO open with session times on 2024-05-18, identical to NFO"]
 
 [[day]]
@@ -474,7 +474,7 @@ date = 2024-11-01
 kind = "SPECIAL_SESSION"
 description = "Diwali Laxmi Pujan"
 verified = true
-note = "NFO session 18:00-19:00 IST per Upstox; not a regular trading day for Project 100C; exact Muhurat timing is from Upstox only"
+note = "NFO session 18:00-19:00 IST per Upstox; not a regular trading day for Optimus Prime; exact Muhurat timing is from Upstox only"
 sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/59722 (12-Dec-2023) trading holidays 2024, via nsearchives + steelcitynettrade mirror (Muhurat trading noted)", "upstox-api market holidays: BFO open with session times on 2024-11-01, identical to NFO"]
 
 [[day]]
@@ -503,7 +503,7 @@ date = 2025-02-01
 kind = "SPECIAL_SESSION"
 description = "Budget Day Session"
 verified = false
-note = "NFO session 09:15-15:30 IST per Upstox; not a regular trading day for Project 100C"
+note = "NFO session 09:15-15:30 IST per Upstox; not a regular trading day for Optimus Prime"
 sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "upstox-api market holidays: BFO open with session times on 2025-02-01, identical to NFO"]
 
 [[day]]
@@ -613,7 +613,7 @@ date = 2025-10-21
 kind = "SPECIAL_SESSION"
 description = "Diwali Laxmi Pujan"
 verified = true
-note = "NFO session 13:45-14:45 IST per Upstox; not a regular trading day for Project 100C; exact Muhurat timing is from Upstox only"
+note = "NFO session 13:45-14:45 IST per Upstox; not a regular trading day for Optimus Prime; exact Muhurat timing is from Upstox only"
 sources = ["upstox-api:/v2/market/holidays/{date} (public, no auth; fetched 2026-09-30 ~18:11-18:18 UTC)", "NSE/CMTR/65587 (13-Dec-2024) trading holidays 2025, via steelcitynettrade mirror; BSE list (web.archive.org) (Muhurat trading noted)", "upstox-api market holidays: BFO open with session times on 2025-10-21, identical to NFO"]
 
 [[day]]
@@ -656,7 +656,7 @@ date = 2026-02-01
 kind = "SPECIAL_SESSION"
 description = "Budget Day Session"
 verified = false
-note = "NFO session 09:15-15:30 IST per Upstox; not a regular trading day for Project 100C"
+note = "NFO session 09:15-15:30 IST per Upstox; not a regular trading day for Optimus Prime"
 sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "upstox-api market holidays: BFO open with session times on 2026-02-01, identical to NFO"]
 
 [[day]]
@@ -773,7 +773,7 @@ date = 2026-11-08
 kind = "SPECIAL_SESSION"
 description = "Diwali Laxmi Pujan"
 verified = true
-note = "NFO session 18:00-19:10 IST per Upstox; not a regular trading day for Project 100C; exact Muhurat timing is from Upstox only"
+note = "NFO session 18:00-19:10 IST per Upstox; not a regular trading day for Optimus Prime; exact Muhurat timing is from Upstox only"
 sources = ["upstox-api:/v2/market/holidays (public, no auth; fetched 2026-09-30 18:10 UTC)", "NSE/BSE trading holidays 2026 circular (jvgroups mirror); niftyindices.com holiday calendar; Economic Times (Muhurat trading noted)", "upstox-api market holidays: BFO open with session times on 2026-11-08, identical to NFO"]
 
 [[day]]
