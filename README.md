@@ -24,7 +24,7 @@ The research layer is intentionally allowed to experiment. Transactional authori
 
 The architecture is shown in two parts, because only the first runs today.
 
-**Shipped — research and evidence path (research and paper only):**
+**Running / under production acceptance — research and evidence path (research and paper only):**
 
 ```mermaid
 flowchart LR
