@@ -15,6 +15,7 @@ The public documentation is intentionally curated around enduring engineering id
 | **Costs** | [Cost-drag study](research/cost-drag-study.md) | Why execution friction is treated as part of strategy economics. |
 | **Engineering** | [Technology stack](engineering/tech-stack.md) | What is actually committed and why the stack stays deliberately small. |
 | **Security** | [Security model](engineering/security.md) | Threat model and authority boundaries without deployment secrets. |
+| **Operations** | [Research Production v1](engineering/research-production.md) | What runs continuously today (privately deployed), its evidence-integrity rules and what it cannot do. |
 | **Public/private boundary** | [Private alpha](engineering/private-alpha.md) | How strategy IP stays private without bypassing public engine contracts. |
 
 ## Additional implementation notes

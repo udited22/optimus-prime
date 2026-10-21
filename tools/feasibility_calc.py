@@ -1,4 +1,4 @@
-"""Project 100C - feasibility arithmetic (design-phase analysis, NOT trading code).
+"""Optimus Prime - feasibility arithmetic (design-phase analysis, NOT trading code).
 
 Reproduces the numbers quoted in README.md / 01-architecture.md.
 All premiums are Black-Scholes ESTIMATES from a spot/IV assumption, not market quotes.
