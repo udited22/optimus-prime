@@ -10,6 +10,10 @@ Optimus Prime treats systematic trading as an end-to-end systems problem: data q
 
 ![Optimus Prime command centre — simulated data](docs/screenshots/v3.2/05-terminal-1440p.png)
 
+## Research Production v1
+
+The research system now runs as a continuous, auditable process: a data-only live option-chain recorder with a fail-closed preflight, an explicit missing-data register, write-once prospective paper evidence kept separate from retrospective diagnostics, a verified off-box backup and a read-only production view. These components run in the private deployment and are not part of this public snapshot. Live autonomous capital execution is not production-enabled yet. See [Research Production v1](docs/engineering/research-production.md).
+
 ## Why this exists
 
 Most trading projects start with a signal and bolt controls on later. Optimus Prime starts with the opposite assumption: **an apparent edge is worthless unless the system can prove it survives realistic costs, out-of-sample testing, regime changes and deterministic risk constraints.**
@@ -81,6 +85,7 @@ That is a feature, not an embarrassment: Optimus Prime is designed to make false
 - [Research methodology](docs/research/methodology.md) — how experiments are structured.
 - [Validation](docs/research/validation.md) — promotion gates and holdout discipline.
 - [Private-alpha boundary](docs/engineering/private-alpha.md) — how reusable infrastructure remains public without publishing live research candidates.
+- [Research Production v1](docs/engineering/research-production.md) — what runs continuously today and what it cannot do.
 
 ## Install and test
 
